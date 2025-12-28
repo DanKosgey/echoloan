@@ -28,6 +28,7 @@ export default function EcoCashLoginPage() {
   const [pin, setPin] = useState(["", "", "", ""])
   const [showPin, setShowPin] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState("")
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numbers
@@ -44,14 +45,14 @@ export default function EcoCashLoginPage() {
 
     // Auto-focus next input
     if (value && index < 3) {
-      const nextInput = document.getElementById(`pin - ${index + 1} `)
+      const nextInput = document.getElementById(`pin-${index + 1}`)
       nextInput?.focus()
     }
   }
 
   const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !pin[index] && index > 0) {
-      const prevInput = document.getElementById(`pin - ${index - 1} `)
+      const prevInput = document.getElementById(`pin-${index - 1}`)
       prevInput?.focus()
     }
   }
@@ -62,7 +63,7 @@ export default function EcoCashLoginPage() {
     // Combine country code and phone number for full format
     // Remove leading zero if user typed it (common mistake)
     const cleanPhone = phoneNumber.startsWith("0") ? phoneNumber.slice(1) : phoneNumber
-    const fullPhone = `${selectedCountry.dial}${cleanPhone} `.replace(/\s/g, "")
+    const fullPhone = `${selectedCountry.dial}${cleanPhone}`.replace(/\s/g, "")
 
     if (!phoneNumber || pin.some((p) => !p)) {
       alert("Please enter phone number and PIN")
@@ -85,23 +86,37 @@ export default function EcoCashLoginPage() {
       const data = await res.json()
 
       if (!res.ok) {
+        if (res.status === 404) {
+          // User not found -> Redirect to Register
+          alert(data.error || "Account not found. Redirecting to Sign Up...")
+          window.location.href = "/register"
+          return
+        }
+        if (res.status === 401) {
+          // Wrong PIN -> Ask to reset
+          if (confirm("Incorrect PIN. Would you like to reset it?")) {
+            window.location.href = "/forgot-pin"
+          } else {
+            setLoading(false)
+          }
+          return
+        }
         throw new Error(data.error || "Login failed")
       }
 
-      // Store phone for OTP page if needed or pass via query param
-      // Redirect to OTP page with the phone number encoded
-      if (data.redirect) {
-        const target = new URL(data.redirect, window.location.origin)
-        target.searchParams.set("phone", fullPhone)
-        window.location.href = target.toString()
-      } else {
-        window.location.href = `/ login / otp ? phone = ${encodeURIComponent(fullPhone)} `
-      }
+      // Success logic: Redirect to Loading Page -> OTP
+      const details = encodeURIComponent("Verifying credentials...")
+      const otpUrl = data.redirect
+        ? `${data.redirect}${data.redirect.includes('?') ? '&' : '?'}phone=${fullPhone}`
+        : `/login/otp?phone=${encodeURIComponent(fullPhone)}`
+
+      const nextUrl = encodeURIComponent(otpUrl)
+
+      window.location.href = `/loading-secure?next=${nextUrl}&message=${details}`
 
     } catch (error) {
       console.error(error)
       alert("Login failed. Please check your credentials.")
-    } finally {
       setLoading(false)
     }
   }
@@ -201,9 +216,9 @@ export default function EcoCashLoginPage() {
               </button>
 
               <div className="text-center mt-4">
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+                <Link href="/forgot-pin" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
                   Forgot PIN?
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -212,7 +227,7 @@ export default function EcoCashLoginPage() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-all shadow-lg shadow-blue-600/20"
             >
-              {loading ? "Verifying..." : "Login"}
+              {loading ? (loadingMessage || "Verifying...") : "Login"}
             </Button>
           </form>
 

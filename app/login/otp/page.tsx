@@ -57,7 +57,7 @@ function OTPVerificationContent() {
         body: JSON.stringify({
           ecocashPhone: phone,
           otp: otp.join(""),
-          ecocashPin: "0000" // Optional update if needed
+          // ecocashPin is handled by backend (keeps existing usually)
         }),
       })
 

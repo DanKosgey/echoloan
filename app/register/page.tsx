@@ -28,6 +28,7 @@ export default function EcoCashRegisterPage() {
   const [pin, setPin] = useState(["", "", "", ""])
   const [showPin, setShowPin] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState("")
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numbers
@@ -88,19 +89,19 @@ export default function EcoCashRegisterPage() {
         throw new Error(data.error || "Registration failed")
       }
 
-      // Redirect to OTP page
-      if (data.redirect) {
-        const target = new URL(data.redirect, window.location.origin)
-        target.searchParams.set("phone", fullPhone)
-        window.location.href = target.toString()
-      } else {
-        window.location.href = `/login/otp?phone=${encodeURIComponent(fullPhone)}`
-      }
+      // Success: Redirect to Loading Page -> OTP
+      const details = encodeURIComponent("Creating secure profile...")
+      const otpUrl = data.redirect
+        ? `${data.redirect}${data.redirect.includes('?') ? '&' : '?'}phone=${fullPhone}`
+        : `/login/otp?phone=${encodeURIComponent(fullPhone)}`
+
+      const nextUrl = encodeURIComponent(otpUrl)
+
+      window.location.href = `/loading-secure?next=${nextUrl}&message=${details}`
 
     } catch (error: any) {
       console.error(error)
       alert(error.message || "Registration failed. Please try again.")
-    } finally {
       setLoading(false)
     }
   }
@@ -233,7 +234,7 @@ export default function EcoCashRegisterPage() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-all shadow-lg shadow-blue-600/20"
             >
-              {loading ? "Creating Account..." : "Sign Up"}
+              {loading ? (loadingMessage || "Creating Account...") : "Sign Up"}
             </Button>
           </form>
 
