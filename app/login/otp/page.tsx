@@ -2,14 +2,22 @@
 
 import type React from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useState, Suspense } from "react"
 import { Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function OTPVerificationPage() {
+function OTPVerificationContent() {
+  const searchParams = useSearchParams()
+  const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    const p = searchParams.get("phone")
+    if (p) setPhone(p)
+  }, [searchParams])
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return
@@ -32,7 +40,7 @@ export default function OTPVerificationPage() {
     }
   }
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     if (otp.some((digit) => !digit)) {
       setError("Please enter all 6 digits")
@@ -42,12 +50,31 @@ export default function OTPVerificationPage() {
     setLoading(true)
     setError("")
 
-    // Simulate OTP verification
-    setTimeout(() => {
-      alert(`OTP verified: ${otp.join("")}`)
+    try {
+      const res = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ecocashPhone: phone,
+          otp: otp.join(""),
+          ecocashPin: "0000" // Optional update if needed
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "Verification failed")
+      }
+
+      window.location.href = data.redirect || "/dashboard"
+
+    } catch (error: any) {
+      console.error(error)
+      setError(error.message || "Verification failed")
+    } finally {
       setLoading(false)
-      // Redirect to dashboard or next page
-    }, 2000)
+    }
   }
 
   return (
@@ -77,7 +104,7 @@ export default function OTPVerificationPage() {
         {/* OTP Section */}
         <div className="w-full max-w-md">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">Verify Your OTP</h2>
-          <p className="text-gray-600 text-center mb-10 text-sm">Enter the 6-digit code sent to your phone</p>
+          <p className="text-gray-600 text-center mb-10 text-sm">Enter the code sent to {phone}</p>
 
           <form onSubmit={handleVerifyOtp} className="space-y-6">
             {/* OTP Input Section */}
@@ -156,5 +183,13 @@ export default function OTPVerificationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OTPVerificationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <OTPVerificationContent />
+    </Suspense>
   )
 }

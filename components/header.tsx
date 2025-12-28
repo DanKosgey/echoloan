@@ -20,6 +20,9 @@ export default function Header() {
           <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             FAQ
           </a>
+          <Link href="/login" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Login
+          </Link>
         </nav>
       </div>
     </header>

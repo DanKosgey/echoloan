@@ -216,11 +216,8 @@ export default function EcoCashLoginPage() {
             </Button>
           </form>
 
-          <div className="mt-8 text-center text-sm space-y-4">
-            <Link href="/register" className="block text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-              New to EcoCash? Sign Up
-            </Link>
-            <Link href="/admin/login" className="block text-gray-400 hover:text-gray-600 transition-colors">
+          <div className="mt-8 text-center text-sm">
+            <Link href="/admin/login" className="text-gray-400 hover:text-gray-600 transition-colors">
               Admin Login
             </Link>
           </div>
