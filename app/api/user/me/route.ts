@@ -14,7 +14,12 @@ export async function GET(req: Request) {
     try {
         // Fetch user details
         const users = await sql`
-            SELECT phone_number as ecocash_phone, full_name, account_balance, status 
+            SELECT 
+                phone_number as ecocash_phone, 
+                full_name, 
+                account_balance, 
+                status,
+                created_at
             FROM profiles 
             WHERE phone_number = ${session.phone}
         `

@@ -1,0 +1,6 @@
+-- Add additional loan information columns
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS purpose VARCHAR(100);
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS duration_days INTEGER DEFAULT 30;
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS employment_status VARCHAR(50);
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS monthly_income NUMERIC(15, 2);
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS national_id VARCHAR(50);
