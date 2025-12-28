@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, ShieldCheck, Database, Server } from "lucide-react"
+import { Suspense } from "react"
 
-export default function SecureLoadingPage() {
+// Content component that uses search params
+function SecureLoadingContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const nextUrl = searchParams.get("next") || "/dashboard"
@@ -91,5 +93,13 @@ export default function SecureLoadingPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function SecureLoadingPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center p-6"><div className="max-w-md w-full text-center">Loading...</div></div>}>
+            <SecureLoadingContent />
+        </Suspense>
     )
 }

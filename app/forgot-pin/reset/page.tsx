@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Suspense } from "react"
 
-export default function ResetPinPage() {
+// Content component that uses search params
+function ResetPinContent() {
     const searchParams = useSearchParams()
     const phone = searchParams.get("phone") || ""
 
@@ -127,5 +129,13 @@ export default function ResetPinPage() {
                 </form>
             </div>
         </div>
+    )
+}
+
+export default function ResetPinPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl text-center">Loading...</div></div>}>
+            <ResetPinContent />
+        </Suspense>
     )
 }
