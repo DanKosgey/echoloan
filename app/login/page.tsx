@@ -220,9 +220,6 @@ export default function EcoCashLoginPage() {
             <Link href="/register" className="block text-blue-600 hover:text-blue-700 font-semibold transition-colors">
               New to EcoCash? Sign Up
             </Link>
-            <Link href="/admin/login" className="block text-gray-400 hover:text-gray-600 transition-colors">
-              Admin Login
-            </Link>
           </div>
         </div>
       </div>

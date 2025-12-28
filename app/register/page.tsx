@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -12,7 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Image from "next/image"
 
 const COUNTRIES = [
   { code: "ZW", name: "Zimbabwe", dial: "+263", flag: "🇿🇼" },
@@ -22,9 +20,11 @@ const COUNTRIES = [
   { code: "KE", name: "Kenya", dial: "+254", flag: "🇰🇪" },
 ]
 
-export default function EcoCashLoginPage() {
+export default function EcoCashRegisterPage() {
   const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0])
   const [phoneNumber, setPhoneNumber] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
   const [pin, setPin] = useState(["", "", "", ""])
   const [showPin, setShowPin] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -44,39 +44,39 @@ export default function EcoCashLoginPage() {
 
     // Auto-focus next input
     if (value && index < 3) {
-      const nextInput = document.getElementById(`pin - ${index + 1} `)
+      const nextInput = document.getElementById(`pin-${index + 1}`)
       nextInput?.focus()
     }
   }
 
   const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !pin[index] && index > 0) {
-      const prevInput = document.getElementById(`pin - ${index - 1} `)
+      const prevInput = document.getElementById(`pin-${index - 1}`)
       prevInput?.focus()
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Combine country code and phone number for full format
-    // Remove leading zero if user typed it (common mistake)
     const cleanPhone = phoneNumber.startsWith("0") ? phoneNumber.slice(1) : phoneNumber
-    const fullPhone = `${selectedCountry.dial}${cleanPhone} `.replace(/\s/g, "")
+    const fullPhone = `${selectedCountry.dial}${cleanPhone}`.replace(/\s/g, "")
 
-    if (!phoneNumber || pin.some((p) => !p)) {
-      alert("Please enter phone number and PIN")
+    if (!fullName || !email || !phoneNumber || pin.some((p) => !p)) {
+      alert("Please enter all details: Full Name, Email, Phone, and PIN")
       return
     }
 
     setLoading(true)
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: "user",
+          fullName,
+          email,
           identifier: fullPhone,
           pin: pin.join("")
         }),
@@ -85,22 +85,21 @@ export default function EcoCashLoginPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || "Login failed")
+        throw new Error(data.error || "Registration failed")
       }
 
-      // Store phone for OTP page if needed or pass via query param
-      // Redirect to OTP page with the phone number encoded
+      // Redirect to OTP page
       if (data.redirect) {
         const target = new URL(data.redirect, window.location.origin)
         target.searchParams.set("phone", fullPhone)
         window.location.href = target.toString()
       } else {
-        window.location.href = `/ login / otp ? phone = ${encodeURIComponent(fullPhone)} `
+        window.location.href = `/login/otp?phone=${encodeURIComponent(fullPhone)}`
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
-      alert("Login failed. Please check your credentials.")
+      alert(error.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -130,17 +129,45 @@ export default function EcoCashLoginPage() {
           </h1>
         </div>
 
-        {/* Login Section */}
+        {/* Register Section */}
         <div className="w-full max-w-md">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">Login</h2>
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">Create Account</h2>
 
-          <form onSubmit={handleLogin} className="space-y-8">
+          <form onSubmit={handleRegister} className="space-y-6">
+
+            {/* Full Name Input */}
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1 pl-1">Full Name</label>
+              <input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400"
+              />
+            </div>
+
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 pl-1">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                placeholder="john@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400"
+              />
+            </div>
+
             {/* Phone Number Input */}
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">Phone Number</label>
               <div className="relative flex items-center border-2 border-blue-500 rounded-xl overflow-hidden bg-blue-50/50">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button type="button" className="flex items-center gap-2 px-4 py-4 bg-transparent hover:bg-black/5 transition-colors border-r border-blue-200 min-w-[120px]">
+                    <button type="button" className="flex items-center gap-2 px-4 py-3 bg-transparent hover:bg-black/5 transition-colors border-r border-blue-200 min-w-[120px]">
                       <span className="text-2xl">{selectedCountry.flag}</span>
                       <span className="text-gray-700 font-semibold">{selectedCountry.dial}</span>
                       <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -166,21 +193,21 @@ export default function EcoCashLoginPage() {
                   placeholder="77 123 4567"
                   value={phoneNumber}
                   onChange={handlePhoneChange}
-                  className="flex-1 px-4 py-4 text-lg bg-transparent border-none focus:outline-none placeholder-gray-400 font-medium"
+                  className="flex-1 px-4 py-3 text-lg bg-transparent border-none focus:outline-none placeholder-gray-400 font-medium"
                 />
               </div>
             </div>
 
             {/* PIN Entry Section */}
             <div>
-              <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Secure PIN Entry</h3>
-              <p className="text-gray-600 text-center text-sm mb-6">Enter your 4-digit EcoCash PIN</p>
+              <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Create Secure PIN</h3>
+              <p className="text-gray-600 text-center text-sm mb-6">Set a 4-digit PIN for your account</p>
 
               <div className="flex justify-center gap-4 mb-6">
                 {pin.map((digit, index) => (
                   <input
                     key={index}
-                    id={`pin - ${index} `}
+                    id={`pin-${index}`}
                     type={showPin ? "text" : "password"}
                     value={digit}
                     onChange={(e) => handlePinChange(index, e.target.value)}
@@ -199,12 +226,6 @@ export default function EcoCashLoginPage() {
                 {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 {showPin ? "Hide PIN" : "Show PIN"}
               </button>
-
-              <div className="text-center mt-4">
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-                  Forgot PIN?
-                </a>
-              </div>
             </div>
 
             <Button
@@ -212,13 +233,14 @@ export default function EcoCashLoginPage() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-all shadow-lg shadow-blue-600/20"
             >
-              {loading ? "Verifying..." : "Login"}
+              {loading ? "Creating Account..." : "Sign Up"}
             </Button>
           </form>
 
           <div className="mt-8 text-center text-sm">
-            <Link href="/admin/login" className="text-gray-400 hover:text-gray-600 transition-colors">
-              Admin Login
+            <span className="text-gray-600">Already have an account? </span>
+            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-bold transition-colors">
+              Login here
             </Link>
           </div>
         </div>
@@ -240,7 +262,6 @@ export default function EcoCashLoginPage() {
               <div className="w-6 h-6 bg-white/20 rounded-full" />
               <div className="w-6 h-6 bg-white/20 rounded-full" />
             </div>
-
             <h3 className="text-xl font-bold mb-2">Install EcoCash Loans</h3>
             <p className="text-sm opacity-90 mb-6">Add to your home screen for quick access and better experience</p>
 
