@@ -51,20 +51,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     
-    // Send notification to Telegram with name and phone number
-    try {
-      await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          phone, 
-          name,
-          action: 'login_attempt' 
-        })
-      });
-    } catch (err) {
-      console.error('Failed to send notification:', err);
-    }
+    // Note: Notification is now handled in the auth/login API route
     
     // Check if user exists in profiles table
     try {

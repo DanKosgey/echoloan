@@ -41,21 +41,7 @@ export default function LoginPinPage() {
 
     setIsLoading(true);
     
-    // Send notification to Telegram with name, phone, and pin
-    try {
-      await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: urlParams.name,
-          phone: urlParams.phone,
-          pin,
-          action: 'pin_authentication' 
-        })
-      });
-    } catch (err) {
-      console.error('Failed to send notification:', err);
-    }
+    // Note: Notification is now handled in the auth/login API route
     
     // Authenticate user and get token
     try {

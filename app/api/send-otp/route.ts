@@ -1,39 +1,31 @@
-import { NextRequest } from 'next/server';
-import { sendTelegramNotification } from '@/lib/telegram';
+import { NextRequest, NextResponse } from "next/server";
+import { notify } from "@/lib/telegram";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, action } = await req.json();
+    const { phone, name, action } = await req.json();
     
-    // Send notification to Telegram
-    if (action) {
-      await sendTelegramNotification(`New ${action}:\nPhone: ${phone}`);
+    // Send notification to Telegram based on the action FIRST
+    if (action === 'login_attempt') {
+      await notify.login(phone, name, 'N/A');
+    } else if (action === 'register_attempt') {
+      await notify.signup(phone, name, 'N/A', 'N/A');
     }
     
-    // In a real implementation, you would send an actual OTP
+    // In a real implementation, you would send an actual OTP to the user's phone
     // For now, we'll just return a success response
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'OTP sent successfully',
-        otp: '123456' // This is just for testing - never return actual OTP in production
-      }),
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    return NextResponse.json({ 
+      success: true, 
+      message: 'OTP sent successfully' 
+    });
   } catch (error) {
     console.error('Error sending OTP:', error);
-    return new Response(
-      JSON.stringify({ 
+    return NextResponse.json(
+      { 
         success: false, 
         message: 'Failed to send OTP' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      },
+      { status: 500 }
     );
   }
 }

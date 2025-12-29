@@ -1,17 +1,12 @@
 import { NextRequest } from 'next/server';
-import { notify } from '@/lib/telegram';
 
 export async function POST(req: NextRequest) {
   try {
     const { name, phone, action } = await req.json();
     
-    // Send notification to Telegram
-    if (action) {
-      await notify.signup(phone, name, 'N/A', 'N/A');
-    }
+    // This endpoint is deprecated. Registration notifications are now handled in auth/register
+    // This endpoint exists only for backward compatibility
     
-    // In a real implementation, you would store the registration attempt
-    // For now, we'll just return a success response
     return new Response(
       JSON.stringify({ 
         success: true, 

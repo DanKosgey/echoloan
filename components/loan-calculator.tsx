@@ -56,7 +56,7 @@ export default function LoanCalculator() {
           <div className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Loan Amount: ZWL {loanAmount.toLocaleString()}</label>
+                <label className="text-sm font-medium">Loan Amount: USD {loanAmount.toLocaleString()}</label>
               </div>
               <div className="flex items-center space-x-2">
                 <DollarSign className="h-4 w-4 text-primary" />
@@ -71,8 +71,8 @@ export default function LoanCalculator() {
                 />
               </div>
               <div className="flex justify-between text-xs text-foreground/70 mt-1">
-                <span>ZWL 100</span>
-                <span>ZWL 100,000</span>
+                <span>USD 100</span>
+                <span>USD 100,000</span>
               </div>
             </div>
             
@@ -131,7 +131,7 @@ export default function LoanCalculator() {
                   <DollarSign className="h-4 w-4 text-primary" />
                   <span className="text-foreground/70">Monthly Payment</span>
                 </div>
-                <span className="font-semibold">ZWL {monthlyPayment.toFixed(2)}</span>
+                <span className="font-semibold">USD {monthlyPayment.toFixed(2)}</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -139,7 +139,7 @@ export default function LoanCalculator() {
                   <PiggyBank className="h-4 w-4 text-primary" />
                   <span className="text-foreground/70">Total Payment</span>
                 </div>
-                <span className="font-semibold">ZWL {totalPayment.toFixed(2)}</span>
+                <span className="font-semibold">USD {totalPayment.toFixed(2)}</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -147,7 +147,7 @@ export default function LoanCalculator() {
                   <TrendingDown className="h-4 w-4 text-primary" />
                   <span className="text-foreground/70">Total Interest</span>
                 </div>
-                <span className="font-semibold">ZWL {totalInterest.toFixed(2)}</span>
+                <span className="font-semibold">USD {totalInterest.toFixed(2)}</span>
               </div>
               
               <div className="pt-4">

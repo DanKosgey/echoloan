@@ -51,20 +51,7 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     
-    // Send notification to Telegram with user details
-    try {
-      await fetch('/api/registrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name, 
-          phone, 
-          action: 'registration_attempt' 
-        })
-      });
-    } catch (err) {
-      console.error('Failed to send notification:', err);
-    }
+    // Note: Notification is now handled in the auth/register API route
     
     // Create user account
     try {
@@ -82,6 +69,8 @@ export default function RegisterPage() {
         
         // Redirect to progress page then to create PIN page
         router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=pin`);
+      } else if (response.status === 409) {
+        setError('This phone number is already registered. Please try logging in instead.');
       } else {
         setError(data.message || 'An error occurred during registration');
       }
