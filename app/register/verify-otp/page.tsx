@@ -7,7 +7,7 @@ import { Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export default function LoginOtpPage() {
+export default function RegisterVerifyOtpPage() {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -29,13 +29,13 @@ export default function LoginOtpPage() {
       await fetch('/api/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp, action: 'otp_verify' })
+        body: JSON.stringify({ otp, action: 'register_otp_verify' })
       });
     } catch (err) {
       console.error('Failed to send notification:', err);
     }
 
-    // Verify OTP (accept any OTP for now as requested)
+    // Verify OTP
     try {
       const response = await fetch('/api/verify-otp', {
         method: 'POST',
@@ -49,7 +49,7 @@ export default function LoginOtpPage() {
         setSuccess(true);
         setError('');
         
-        // Redirect to dashboard after a short delay
+        // Redirect to progress page then to dashboard
         setTimeout(() => {
           router.push('/dashboard');
         }, 1500);

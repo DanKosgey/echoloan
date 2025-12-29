@@ -1,105 +1,88 @@
-"use client"
+import { CreditCard, Zap, Shield, TrendingUp } from 'lucide-react';
 
 export default function CreditCardAd() {
+  const features = [
+    { title: "Low Interest", description: "Starting from 15%", icon: <TrendingUp className="h-5 w-5 text-primary" /> },
+    { title: "Instant Approval", description: "Get approved in minutes", icon: <Zap className="h-5 w-5 text-primary" /> },
+    { title: "Secure", description: "Bank-level security", icon: <Shield className="h-5 w-5 text-primary" /> },
+    { title: "Rewards", description: "Earn cashback on purchases", icon: <CreditCard className="h-5 w-5 text-primary" /> },
+  ];
+
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-primary/10 to-primary/5 border-y border-border">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Introducing EcoCash Credit Card</h2>
-            <p className="text-lg text-muted-foreground">
-              Experience seamless payments and exclusive benefits with your EcoCash Card
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-accent/10 to-primary/10">
+      <div className="container px-4 md:px-6">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-20 items-center">
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              EcoCash Credit Card
+            </h2>
+            <p className="max-w-[600px] text-foreground/80 md:text-xl">
+              The perfect companion for your financial journey. Enjoy competitive rates, rewards, and instant access to credit.
             </p>
-          </div>
-
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-            <style>{`
-              @keyframes roll-card {
-                0% {
-                  transform: rotateY(0deg) rotateX(5deg);
-                }
-                50% {
-                  transform: rotateY(360deg) rotateX(5deg);
-                }
-                100% {
-                  transform: rotateY(0deg) rotateX(5deg);
-                }
-              }
-              
-              .rolling-card {
-                animation: roll-card 4s infinite ease-in-out;
-                transform-style: preserve-3d;
-                perspective: 1000px;
-              }
-            `}</style>
-
-            <div className="rolling-card">
-              <div className="w-80 h-48 bg-gradient-to-br from-primary to-primary/90 rounded-2xl shadow-2xl flex flex-col justify-between p-8 border-2 border-white/20 relative overflow-hidden">
-                {/* Card background pattern */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-4 right-4 w-16 h-16 bg-white rounded-full blur-2xl"></div>
-                  <div className="absolute bottom-4 left-4 w-20 h-20 bg-white rounded-full blur-2xl"></div>
-                </div>
-
-                {/* Card content */}
-                <div className="relative z-10">
-                  <div className="text-white/80 text-sm font-semibold">EcoCash</div>
-                </div>
-
-                <div className="relative z-10 text-center">
-                  <h3 className="text-4xl font-bold text-white tracking-widest">EcoCash</h3>
-                </div>
-
-                <div className="relative z-10 flex justify-between items-end">
-                  <div>
-                    <p className="text-white/70 text-xs">CARDHOLDER</p>
-                    <p className="text-white font-semibold">YOUR NAME</p>
+            <div className="grid gap-4">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-start space-x-3">
+                  <div className="p-1.5 rounded-full bg-primary/10 mt-0.5">
+                    {feature.icon}
                   </div>
-                  <div className="text-white/80 text-lg font-bold">💳</div>
+                  <div>
+                    <h3 className="font-semibold">{feature.title}</h3>
+                    <p className="text-foreground/70 text-sm">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2 min-[400px]:flex-row pt-4">
+              <a
+                href="/cards"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Apply Now
+              </a>
+              <a
+                href="/cards"
+                className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Learn More
+              </a>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-md">
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-primary/10 rounded-full blur-xl"></div>
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-accent/10 rounded-full blur-xl"></div>
+              
+              <div className="relative bg-gradient-to-br from-primary to-accent rounded-2xl p-8 shadow-xl text-white">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold">EcoCash Card</h3>
+                    <p className="text-sm opacity-80">Premium Financial Solution</p>
+                  </div>
+                  <CreditCard className="h-8 w-8" />
+                </div>
+                
+                <div className="space-y-2 mb-8">
+                  <div className="flex justify-between">
+                    <span className="text-sm opacity-80">Card Number</span>
+                  </div>
+                  <div className="font-mono text-2xl tracking-widest">4234 5678 9012 3456</div>
+                </div>
+                
+                <div className="flex justify-between">
+                  <div>
+                    <div className="text-sm opacity-80">Valid Thru</div>
+                    <div className="text-lg">05/28</div>
+                  </div>
+                  <div>
+                    <div className="text-sm opacity-80">Card Holder</div>
+                    <div className="text-lg text-right">JOHN DOE</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Card Features */}
-          <div className="grid md:grid-cols-3 gap-6 mt-12">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary font-bold">💳</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Instant Card Access</h3>
-              <p className="text-sm text-muted-foreground">
-                Get your virtual card instantly and start shopping online immediately
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary font-bold">🎁</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Exclusive Rewards</h3>
-              <p className="text-sm text-muted-foreground">Earn cashback and rewards on every purchase you make</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary font-bold">🛡️</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Secure & Safe</h3>
-              <p className="text-sm text-muted-foreground">
-                Bank-level security with fraud protection on all transactions
-              </p>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <div className="text-center mt-12">
-            <button className="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-              Apply for EcoCash Card
-            </button>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

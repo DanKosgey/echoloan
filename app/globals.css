@@ -3,91 +3,60 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  /* Updated primary to EcoCash blue */
-  --primary: oklch(0.42 0.18 260);
-  --primary-foreground: oklch(1 0 0);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  /* Neutrals: Clean whites and charcoal */
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
-
-  /* Updated accent to EcoCash red */
-  --accent: oklch(0.52 0.2 20);
-  --accent-foreground: oklch(1 0 0);
-
-  /* Supporting */
-  --secondary: oklch(0.92 0.02 200);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.85 0.01 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.95 0 0);
-  --ring: oklch(0.42 0.18 260);
-
-  /* Charts */
-  --chart-1: oklch(0.42 0.18 260);
-  --chart-2: oklch(0.52 0.2 20);
-  --chart-3: oklch(0.65 0.15 140);
-  --chart-4: oklch(0.5 0.1 170);
-  --chart-5: oklch(0.6 0.12 130);
-
-  /* Destructive */
-  --destructive: oklch(0.55 0.22 30);
-  --destructive-foreground: oklch(1 0 0);
-
-  /* Sidebar */
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.42 0.18 260);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.52 0.2 20);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.42 0.18 260);
-
-  --radius: 0.75rem;
-}
-
-.dark {
-  --primary: oklch(0.55 0.18 260);
-  --primary-foreground: oklch(0.15 0 0);
-
-  --background: oklch(0.12 0 0);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.18 0.01 220);
-  --card-foreground: oklch(0.95 0 0);
-
-  --accent: oklch(0.65 0.2 20);
-  --accent-foreground: oklch(0.12 0 0);
-
-  --secondary: oklch(0.25 0.02 200);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.35 0.01 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --border: oklch(0.3 0 0);
-  --input: oklch(0.2 0 0);
-  --ring: oklch(0.55 0.18 260);
-
-  --chart-1: oklch(0.55 0.18 260);
-  --chart-2: oklch(0.65 0.2 20);
-  --chart-3: oklch(0.7 0.15 140);
-  --chart-4: oklch(0.62 0.1 170);
-  --chart-5: oklch(0.68 0.12 130);
-
-  --destructive: oklch(0.7 0.22 30);
-  --destructive-foreground: oklch(0.12 0 0);
-
-  --sidebar: oklch(0.15 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.55 0.18 260);
-  --sidebar-primary-foreground: oklch(0.15 0 0);
-  --sidebar-accent: oklch(0.65 0.2 20);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.3 0 0);
-  --sidebar-ring: oklch(0.55 0.18 260);
+@layer base {
+  :root {
+    /* Brighter primary color - vibrant blue */
+    --primary: oklch(0.55 0.12 240);
+    --primary-foreground: oklch(0.98 0.02 240);
+    /* Brighter background and foreground */
+    --background: oklch(0.99 0.01 240);
+    --foreground: oklch(0.15 0.01 240);
+    /* Brighter accent color - vibrant green for financial trust */
+    --accent: oklch(0.65 0.15 140);
+    --accent-foreground: oklch(0.98 0.02 140);
+    /* Brighter muted color */
+    --muted: oklch(0.9 0.01 240);
+    --muted-foreground: oklch(0.5 0.01 240);
+    /* Brighter card and border colors */
+    --card: oklch(0.98 0.01 240);
+    --card-foreground: oklch(0.2 0.01 240);
+    --popover: oklch(0.99 0.01 240);
+    --popover-foreground: oklch(0.15 0.01 240);
+    --border: oklch(0.85 0.01 240);
+    --input: oklch(0.85 0.01 240);
+    /* Brighter destructive color for errors */
+    --destructive: oklch(0.7 0.18 20);
+    --destructive-foreground: oklch(0.98 0.02 240);
+    /* Brighter ring color */
+    --ring: oklch(0.55 0.12 240);
+    
+    --radius: 0.5rem;
+  }
+  
+  .dark {
+    /* Dark theme with brighter colors */
+    --primary: oklch(0.7 0.12 240);
+    --primary-foreground: oklch(0.1 0.02 240);
+    --background: oklch(0.1 0.01 240);
+    --foreground: oklch(0.9 0.01 240);
+    --accent: oklch(0.6 0.15 140);
+    --accent-foreground: oklch(0.1 0.02 240);
+    --muted: oklch(0.2 0.01 240);
+    --muted-foreground: oklch(0.6 0.01 240);
+    --card: oklch(0.15 0.01 240);
+    --card-foreground: oklch(0.85 0.01 240);
+    --popover: oklch(0.1 0.01 240);
+    --popover-foreground: oklch(0.9 0.01 240);
+    --border: oklch(0.3 0.01 240);
+    --input: oklch(0.3 0.01 240);
+    --destructive: oklch(0.7 0.18 20);
+    --destructive-foreground: oklch(0.98 0.02 240);
+    --ring: oklch(0.7 0.12 240);
+  }
 }
 
 @theme inline {

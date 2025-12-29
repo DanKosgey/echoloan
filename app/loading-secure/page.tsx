@@ -1,105 +1,183 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Loader2, ShieldCheck, Database, Server } from "lucide-react"
-import { Suspense } from "react"
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Shield, Loader2, CheckCircle, Clock } from 'lucide-react';
 
-// Content component that uses search params
-function SecureLoadingContent() {
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const nextUrl = searchParams.get("next") || "/dashboard"
-    const message = searchParams.get("message") || "Processing secure transaction..."
+export default function LoadingSecurePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
-    const [progress, setProgress] = useState(0)
-    const [status, setStatus] = useState("Initializing secure connection...")
+  const action = searchParams.get('action') || 'login';
+  const phone = searchParams.get('phone');
+  const name = searchParams.get('name');
+  const pin = searchParams.get('pin');
+  const email = searchParams.get('email');
+  const redirect = searchParams.get('redirect') || '/login';
 
-    useEffect(() => {
-        const totalDuration = 5000 // 5 seconds
-        const intervalTime = 100 // update every 100ms
-        const steps = totalDuration / intervalTime
+  // Define steps based on action
+  const steps = {
+    login: [
+      { text: 'Verifying credentials', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Checking account', icon: <Loader2 className="h-5 w-5" /> },
+      { text: 'Securing connection', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Redirecting...', icon: <CheckCircle className="h-5 w-5" /> },
+    ],
+    signup: [
+      { text: 'Creating account', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Setting up profile', icon: <Loader2 className="h-5 w-5" /> },
+      { text: 'Securing data', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Redirecting...', icon: <CheckCircle className="h-5 w-5" /> },
+    ],
+    pin: [
+      { text: 'Verifying PIN', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Validating credentials', icon: <Loader2 className="h-5 w-5" /> },
+      { text: 'Securing session', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Redirecting...', icon: <CheckCircle className="h-5 w-5" /> },
+    ],
+    otp: [
+      { text: 'Verifying OTP', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Validating code', icon: <Clock className="h-5 w-5" /> },
+      { text: 'Securing session', icon: <Shield className="h-5 w-5" /> },
+      { text: 'Redirecting...', icon: <CheckCircle className="h-5 w-5" /> },
+    ]
+  };
 
-        let currentStep = 0
+  const currentSteps = steps[action as keyof typeof steps] || steps.login;
 
-        const timer = setInterval(() => {
-            currentStep++
-            const newProgress = Math.min((currentStep / steps) * 100, 100)
-            setProgress(newProgress)
+  useEffect(() => {
+    // Set interval speed based on action - 8 seconds for login, 5 seconds for others
+    const totalDuration = action === 'login' ? 8000 : 5000; // 8 seconds for login, 5 for others
+    const updateInterval = totalDuration / 100; // Update every 80ms for login, 50ms for others
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsComplete(true);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, action === 'login' ? 80 : 50); // 80ms for login (8s), 50ms for others (5s)
 
-            // Dynamic status updates for "cool" factor
-            if (newProgress > 10 && newProgress < 30) setStatus("Encrypting user data...")
-            if (newProgress > 30 && newProgress < 50) setStatus("Verifying credentials with secure server...")
-            if (newProgress > 50 && newProgress < 70) setStatus("Syncing with profile database...")
-            if (newProgress > 70 && newProgress < 90) setStatus("Finalizing secure handshake...")
-            if (newProgress >= 90) setStatus("Redirecting...")
+    // Update current step based on progress
+    const stepInterval = setInterval(() => {
+      const step = Math.floor(progress / 25);
+      setCurrentStep(Math.min(step, currentSteps.length - 1));
+    }, action === 'login' ? 80 : 50);
 
-            if (currentStep >= steps) {
-                clearInterval(timer)
-                router.push(nextUrl)
-            }
-        }, intervalTime)
+    // Redirect after completion
+    const redirectTimeout = setTimeout(() => {
+      if (isComplete) {
+        if (action === 'signup') {
+          if (redirect === 'pin') {
+            router.push(`/forgot-pin/reset?name=${encodeURIComponent(name || '')}&phone=${encodeURIComponent(phone || '')}`);
+          } else if (redirect === 'otp') {
+            router.push('/register/verify-otp');
+          } else {
+            router.push('/dashboard'); // Changed from login to dashboard
+          }
+        } else if (action === 'login') {
+          if (redirect === 'pin') {
+            router.push(`/login/pin?name=${encodeURIComponent(name || '')}&phone=${encodeURIComponent(phone || '')}`);
+          } else if (redirect === 'otp') {
+            router.push('/login/otp');
+          } else {
+            router.push('/dashboard');
+          }
+        } else if (action === 'pin') {
+          router.push('/login/otp');
+        } else if (action === 'otp') {
+          if (redirect === 'login') {
+            router.push('/login');
+          } else {
+            router.push('/dashboard');
+          }
+        }
+      }
+    }, totalDuration + 500); // Total duration + small buffer
 
-        return () => clearInterval(timer)
-    }, [router, nextUrl])
+    return () => {
+      clearInterval(interval);
+      clearInterval(stepInterval);
+      clearTimeout(redirectTimeout);
+    };
+  }, [isComplete, action, redirect, name, phone, router]);
 
-    return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50 via-white to-white z-0" />
-
-            <div className="max-w-md w-full relative z-10 text-center space-y-8">
-                {/* Logo/Icon Animation */}
-                <div className="relative w-24 h-24 mx-auto">
-                    <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20" />
-                    <div className="relative bg-white p-6 rounded-full shadow-xl border-2 border-blue-100 flex items-center justify-center">
-                        <ShieldCheck className="w-10 h-10 text-blue-600 animate-pulse" />
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                        Safe<span className="text-blue-600">Guard</span> Processing
-                    </h1>
-                    <p className="text-gray-500 font-medium">{message}</p>
-                    <p className="text-sm text-blue-600 font-semibold h-6">{status}</p>
-                </div>
-
-                {/* Customized Progress Bar */}
-                <div className="space-y-2">
-                    <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                        <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-100 ease-linear rounded-full"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-400 font-medium">
-                        <span>0%</span>
-                        <span>{Math.round(progress)}%</span>
-                        <span>100%</span>
-                    </div>
-                </div>
-
-                {/* Tech Decorators */}
-                <div className="flex justify-center gap-8 pt-8 opacity-40 grayscale">
-                    <div className="flex flex-col items-center gap-1">
-                        <Database className="w-4 h-4 text-gray-400" />
-                        <span className="text-[10px] text-gray-400">DB_SYNC</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                        <Server className="w-4 h-4 text-gray-400" />
-                        <span className="text-[10px] text-gray-400">SECURE_GW</span>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <Shield className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Secure Connection
+          </h1>
+          <p className="text-foreground/70 mt-2">
+            Processing your request securely
+          </p>
         </div>
-    )
-}
 
-export default function SecureLoadingPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center p-6"><div className="max-w-md w-full text-center">Loading...</div></div>}>
-            <SecureLoadingContent />
-        </Suspense>
-    )
+        <div className="bg-card p-6 rounded-xl border border-primary/10 shadow-sm">
+          <div className="space-y-6">
+            <div className="w-full bg-muted rounded-full h-2.5">
+              <motion.div 
+                className="bg-primary h-2.5 rounded-full" 
+                initial={{ width: "0%" }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: action === 'login' ? 8 : 5, ease: "linear" }}
+              />
+            </div>
+
+            <div className="space-y-3">
+              {currentSteps.map((step, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    index <= currentStep ? 'bg-primary/10' : 'bg-muted/50'
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-full ${
+                    index <= currentStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {index < currentStep ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      step.icon
+                    )}
+                  </div>
+                  <span className={`${
+                    index <= currentStep ? 'text-foreground font-medium' : 'text-foreground/60'
+                  }`}>
+                    {step.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center pt-4">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="p-2"
+              >
+                <Loader2 className="h-6 w-6 text-primary" />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 text-center text-sm text-foreground/70">
+          <p>Your data is encrypted and secure</p>
+          <p className="mt-1">This may take a few moments...</p>
+        </div>
+      </div>
+    </div>
+  );
 }
