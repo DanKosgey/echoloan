@@ -14,12 +14,16 @@ export async function POST(req: NextRequest) {
       await notify.signup(phone, name, 'N/A', 'N/A');
     }
     
+    // Create a mock token (in a real app, this would be a JWT)
+    const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     // In a real implementation, you would create the user in the database
     // For now, we'll just return a success response
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'User registered successfully' 
+        message: 'User registered successfully',
+        token: token
       }),
       { 
         status: 200,

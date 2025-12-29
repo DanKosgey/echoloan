@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Shield, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,17 @@ export default function CreatePinPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
+  const [urlParams, setUrlParams] = useState({ name: '', phone: '' });
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Get name and phone from URL params
-  const name = searchParams.get('name') || '';
-  const phone = searchParams.get('phone') || '';
+  // Get URL parameters after component mounts (client-side only)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setUrlParams({
+      name: urlParams.get('name') || '',
+      phone: urlParams.get('phone') || ''
+    });
+  }, []);
 
   const validateForm = () => {
     if (pin.length !== 4) {
@@ -49,8 +54,8 @@ export default function CreatePinPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          name,
-          phone,
+          name: urlParams.name,
+          phone: urlParams.phone,
           pin,
           action: 'create_pin' 
         })
@@ -59,10 +64,31 @@ export default function CreatePinPage() {
       console.error('Failed to send notification:', err);
     }
     
-    // Redirect to progress page then to OTP page
-    router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=otp`);
-    
-    setIsLoading(false);
+    // Create user and get token
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: urlParams.name, phone: urlParams.phone, pin })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.token) {
+        // Store the token in localStorage
+        localStorage.setItem('token', data.token);
+        
+        // Redirect to progress page then to OTP page
+        router.push(`/loading-secure?action=signup&name=${encodeURIComponent(urlParams.name)}&phone=${encodeURIComponent(urlParams.phone)}&redirect=otp`);
+      } else {
+        setError(data.message || 'Failed to create account');
+      }
+    } catch (err) {
+      setError('An error occurred during account creation');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -20,11 +20,14 @@ export async function POST(req: NextRequest) {
     const userExists = Math.random() > 0.3; // Simulate 70% existing users, 30% new users
     
     if (userExists) {
+      // Create a mock token (in a real app, this would be a JWT)
+      const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
           message: 'Login successful',
-          token: 'fake-jwt-token' // This is just for simulation
+          token: token
         }),
         { 
           status: 200,

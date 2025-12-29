@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { User, Phone, ArrowRight, Shield, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,17 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [urlParams, setUrlParams] = useState({ initialName: '', initialPhone: '' });
   const router = useRouter();
-  const searchParams = useSearchParams();
   
-  // Get name and phone from URL params if available
-  const initialName = searchParams.get('name') || '';
-  const initialPhone = searchParams.get('phone') || '';
+  // Get URL parameters after component mounts (client-side only)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setUrlParams({
+      initialName: urlParams.get('name') || '',
+      initialPhone: urlParams.get('phone') || ''
+    });
+  }, []);
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -71,7 +76,10 @@ export default function RegisterPage() {
       
       const data = await response.json();
       
-      if (response.ok) {
+      if (response.ok && data.token) {
+        // Store the token in localStorage
+        localStorage.setItem('token', data.token);
+        
         // Redirect to progress page then to create PIN page
         router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=pin`);
       } else {
@@ -113,7 +121,7 @@ export default function RegisterPage() {
                 id="name"
                 type="text"
                 placeholder="Enter your full name"
-                value={name || initialName}
+                value={name || urlParams.initialName}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 text-base border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
               />
@@ -132,7 +140,7 @@ export default function RegisterPage() {
                 id="phone"
                 type="tel"
                 placeholder="Enter your phone number"
-                value={phone || initialPhone}
+                value={phone || urlParams.initialPhone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 text-base border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
               />

@@ -46,6 +46,11 @@ export default function RegisterVerifyOtpPage() {
       const data = await response.json();
       
       if (response.ok) {
+        // In a real implementation, you would receive a token after OTP verification
+        // For now, we'll create a mock token
+        const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('token', token);
+        
         setSuccess(true);
         setError('');
         

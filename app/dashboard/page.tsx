@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,10 +8,11 @@ export default function DashboardPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
 
-  // Check if user is authenticated
+  // Check if user is authenticated by checking for token in localStorage
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
+      // If no token, redirect to login
       router.push('/login');
     }
   }, [router]);

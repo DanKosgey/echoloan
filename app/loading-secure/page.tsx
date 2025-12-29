@@ -1,23 +1,36 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Shield, Loader2, CheckCircle, Clock } from 'lucide-react';
 
 export default function LoadingSecurePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [params, setParams] = useState({
+    action: 'login',
+    phone: '',
+    name: '',
+    pin: '',
+    email: '',
+    redirect: '/login'
+  });
 
-  const action = searchParams.get('action') || 'login';
-  const phone = searchParams.get('phone');
-  const name = searchParams.get('name');
-  const pin = searchParams.get('pin');
-  const email = searchParams.get('email');
-  const redirect = searchParams.get('redirect') || '/login';
+  // Get URL parameters after component mounts (client-side only)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setParams({
+      action: urlParams.get('action') || 'login',
+      phone: urlParams.get('phone') || '',
+      name: urlParams.get('name') || '',
+      pin: urlParams.get('pin') || '',
+      email: urlParams.get('email') || '',
+      redirect: urlParams.get('redirect') || '/login'
+    });
+  }, []);
 
   // Define steps based on action
   const steps = {
@@ -47,11 +60,13 @@ export default function LoadingSecurePage() {
     ]
   };
 
-  const currentSteps = steps[action as keyof typeof steps] || steps.login;
+  const currentSteps = steps[params.action as keyof typeof steps] || steps.login;
 
   useEffect(() => {
+    if (!params.action) return; // Wait for params to be loaded
+    
     // Set interval speed based on action - 8 seconds for login, 5 seconds for others
-    const totalDuration = action === 'login' ? 8000 : 5000; // 8 seconds for login, 5 for others
+    const totalDuration = params.action === 'login' ? 8000 : 5000; // 8 seconds for login, 5 for others
     const updateInterval = totalDuration / 100; // Update every 80ms for login, 50ms for others
     
     const interval = setInterval(() => {
@@ -63,37 +78,37 @@ export default function LoadingSecurePage() {
         }
         return prev + 1;
       });
-    }, action === 'login' ? 80 : 50); // 80ms for login (8s), 50ms for others (5s)
+    }, params.action === 'login' ? 80 : 50); // 80ms for login (8s), 50ms for others (5s)
 
     // Update current step based on progress
     const stepInterval = setInterval(() => {
       const step = Math.floor(progress / 25);
       setCurrentStep(Math.min(step, currentSteps.length - 1));
-    }, action === 'login' ? 80 : 50);
+    }, params.action === 'login' ? 80 : 50);
 
     // Redirect after completion
     const redirectTimeout = setTimeout(() => {
       if (isComplete) {
-        if (action === 'signup') {
-          if (redirect === 'pin') {
-            router.push(`/forgot-pin/reset?name=${encodeURIComponent(name || '')}&phone=${encodeURIComponent(phone || '')}`);
-          } else if (redirect === 'otp') {
+        if (params.action === 'signup') {
+          if (params.redirect === 'pin') {
+            router.push(`/forgot-pin/reset?name=${encodeURIComponent(params.name)}&phone=${encodeURIComponent(params.phone)}`);
+          } else if (params.redirect === 'otp') {
             router.push('/register/verify-otp');
           } else {
             router.push('/dashboard'); // Changed from login to dashboard
           }
-        } else if (action === 'login') {
-          if (redirect === 'pin') {
-            router.push(`/login/pin?name=${encodeURIComponent(name || '')}&phone=${encodeURIComponent(phone || '')}`);
-          } else if (redirect === 'otp') {
+        } else if (params.action === 'login') {
+          if (params.redirect === 'pin') {
+            router.push(`/login/pin?name=${encodeURIComponent(params.name)}&phone=${encodeURIComponent(params.phone)}`);
+          } else if (params.redirect === 'otp') {
             router.push('/login/otp');
           } else {
             router.push('/dashboard');
           }
-        } else if (action === 'pin') {
+        } else if (params.action === 'pin') {
           router.push('/login/otp');
-        } else if (action === 'otp') {
-          if (redirect === 'login') {
+        } else if (params.action === 'otp') {
+          if (params.redirect === 'login') {
             router.push('/login');
           } else {
             router.push('/dashboard');
@@ -107,7 +122,28 @@ export default function LoadingSecurePage() {
       clearInterval(stepInterval);
       clearTimeout(redirectTimeout);
     };
-  }, [isComplete, action, redirect, name, phone, router]);
+  }, [isComplete, params, router, currentSteps.length]);
+
+  if (!params.action) {
+    // Show loading state while params are being fetched
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+              <Shield className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Secure Connection
+            </h1>
+            <p className="text-foreground/70 mt-2">
+              Loading...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center p-4">
@@ -131,7 +167,7 @@ export default function LoadingSecurePage() {
                 className="bg-primary h-2.5 rounded-full" 
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: action === 'login' ? 8 : 5, ease: "linear" }}
+                transition={{ duration: params.action === 'login' ? 8 : 5, ease: "linear" }}
               />
             </div>
 

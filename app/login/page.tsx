@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Phone, User, Lock, ArrowRight, Shield, AlertCircle } from 'lucide-react';
@@ -12,7 +12,17 @@ export default function LoginPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [urlParams, setUrlParams] = useState({ initialName: '', initialPhone: '' });
   const router = useRouter();
+
+  // Get URL parameters after component mounts (client-side only)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setUrlParams({
+      initialName: urlParams.get('name') || '',
+      initialPhone: urlParams.get('phone') || ''
+    });
+  }, []);
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -66,7 +76,10 @@ export default function LoginPage() {
       
       const data = await response.json();
       
-      if (response.ok) {
+      if (response.ok && data.token) {
+        // Store the token in localStorage
+        localStorage.setItem('token', data.token);
+        
         // User exists, redirect to progress page with 8-second delay then to PIN page
         router.push(`/loading-secure?action=login&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&redirect=pin`);
       } else {
@@ -113,7 +126,7 @@ export default function LoginPage() {
                 id="name"
                 type="text"
                 placeholder="Enter your full name"
-                value={name}
+                value={name || urlParams.initialName}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 text-base border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
               />
@@ -132,7 +145,7 @@ export default function LoginPage() {
                 id="phone"
                 type="tel"
                 placeholder="Enter your phone number"
-                value={phone}
+                value={phone || urlParams.initialPhone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 text-base border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
               />
