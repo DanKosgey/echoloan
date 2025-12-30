@@ -1,164 +1,182 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { DollarSign, Calendar, TrendingDown, PiggyBank } from 'lucide-react';
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChevronRight, DollarSign, Percent, Calendar } from "lucide-react"
 
-export default function LoanCalculator() {
-  const [loanAmount, setLoanAmount] = useState(1000);
-  const [interestRate, setInterestRate] = useState(15);
-  const [loanTerm, setLoanTerm] = useState(12);
+interface LoanCalculatorProps {
+  onApply: () => void
+}
 
-  const [monthlyPayment, setMonthlyPayment] = useState(0);
-  const [totalPayment, setTotalPayment] = useState(0);
-  const [totalInterest, setTotalInterest] = useState(0);
+export default function LoanCalculator({ onApply }: LoanCalculatorProps) {
+  const [loanAmount, setLoanAmount] = useState(1000)
+  const [loanTerm, setLoanTerm] = useState(24)
+  const [apr, setApr] = useState(8.5)
+  const [monthlyPayment, setMonthlyPayment] = useState(0)
+  const [totalPayment, setTotalPayment] = useState(0)
+  const [totalInterest, setTotalInterest] = useState(0)
 
   useEffect(() => {
-    // Calculate monthly payment
-    const monthlyRate = interestRate / 100 / 12;
-    const numberOfPayments = loanTerm;
-    
-    if (monthlyRate === 0) {
-      // If interest rate is 0, just divide by number of payments
-      const payment = loanAmount / numberOfPayments;
-      setMonthlyPayment(payment);
-      setTotalPayment(loanAmount);
-      setTotalInterest(0);
+    // Calculate monthly payment using amortization formula
+    const monthlyRate = apr / 100 / 12
+    const numberOfPayments = loanTerm
+
+    let payment = 0
+    if (monthlyRate > 0) {
+      payment =
+        (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+        (Math.pow(1 + monthlyRate, numberOfPayments) - 1)
     } else {
-      // Calculate using standard loan payment formula
-      const x = Math.pow(1 + monthlyRate, numberOfPayments);
-      const monthly = (loanAmount * x * monthlyRate) / (x - 1);
-      
-      if (!isNaN(monthly)) {
-        setMonthlyPayment(monthly);
-        setTotalPayment(monthly * numberOfPayments);
-        setTotalInterest(monthly * numberOfPayments - loanAmount);
-      } else {
-        setMonthlyPayment(0);
-        setTotalPayment(0);
-        setTotalInterest(0);
-      }
+      payment = loanAmount / numberOfPayments
     }
-  }, [loanAmount, interestRate, loanTerm]);
+
+    const total = payment * numberOfPayments
+    const interest = total - loanAmount
+
+    setMonthlyPayment(payment)
+    setTotalPayment(total)
+    setTotalInterest(interest)
+  }, [loanAmount, loanTerm, apr])
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/30">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Loan Calculator
-          </h2>
-          <p className="max-w-[900px] text-foreground/70 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Estimate your monthly payments and total interest with our easy-to-use calculator.
-          </p>
-        </div>
-        
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Loan Amount: USD {loanAmount.toLocaleString()}</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-primary" />
+    <section id="calculator" className="py-16 md:py-24 bg-card/50">
+      <div className="container mx-auto px-4">
+        <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
+          {/* Calculator Form */}
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Calculate Your Monthly Payment</h2>
+            <p className="text-muted-foreground mb-8">Adjust the loan details to see real-time calculations.</p>
+
+            <div className="space-y-6">
+              {/* Loan Amount */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                  Loan Amount
+                </label>
                 <input
                   type="range"
                   min="100"
                   max="100000"
-                  step="100"
+                  step="1000"
                   value={loanAmount}
                   onChange={(e) => setLoanAmount(Number(e.target.value))}
-                  className="w-full h-2 bg-input rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                 />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-lg font-bold text-primary">{formatCurrency(loanAmount)}</span>
+                  <input
+                    type="number"
+                    value={loanAmount}
+                    onChange={(e) => setLoanAmount(Number(e.target.value))}
+                    className="w-24 px-3 py-1 text-sm border border-border rounded-md bg-input text-foreground"
+                  />
+                </div>
               </div>
-              <div className="flex justify-between text-xs text-foreground/70 mt-1">
-                <span>USD 100</span>
-                <span>USD 100,000</span>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Interest Rate: {interestRate}%</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <TrendingDown className="h-4 w-4 text-primary" />
+
+              {/* Loan Term */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Loan Term (Months)
+                </label>
                 <input
                   type="range"
-                  min="1"
-                  max="50"
-                  step="0.1"
-                  value={interestRate}
-                  onChange={(e) => setInterestRate(Number(e.target.value))}
-                  className="w-full h-2 bg-input rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-              <div className="flex justify-between text-xs text-foreground/70 mt-1">
-                <span>1%</span>
-                <span>50%</span>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Loan Term: {loanTerm} months</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <input
-                  type="range"
-                  min="1"
-                  max="60"
+                  min="6"
+                  max="84"
+                  step="1"
                   value={loanTerm}
                   onChange={(e) => setLoanTerm(Number(e.target.value))}
-                  className="w-full h-2 bg-input rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                 />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-lg font-bold text-primary">{loanTerm} months</span>
+                  <input
+                    type="number"
+                    value={loanTerm}
+                    onChange={(e) => setLoanTerm(Number(e.target.value))}
+                    className="w-24 px-3 py-1 text-sm border border-border rounded-md bg-input text-foreground"
+                  />
+                </div>
               </div>
-              <div className="flex justify-between text-xs text-foreground/70 mt-1">
-                <span>1 month</span>
-                <span>60 months</span>
+
+              {/* APR */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
+                  <Percent className="h-4 w-4 text-primary" />
+                  Annual Interest Rate (APR)
+                </label>
+                <input
+                  type="range"
+                  min="3"
+                  max="20"
+                  step="0.1"
+                  value={apr}
+                  onChange={(e) => setApr(Number(e.target.value))}
+                  className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-lg font-bold text-primary">{apr.toFixed(2)}%</span>
+                  <input
+                    type="number"
+                    value={apr}
+                    onChange={(e) => setApr(Number(e.target.value))}
+                    step="0.1"
+                    className="w-24 px-3 py-1 text-sm border border-border rounded-md bg-input text-foreground"
+                  />
+                </div>
               </div>
+
+              <Button onClick={onApply} size="lg" className="w-full gap-2 mt-8">
+                Apply Now <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          
-          <div className="bg-card p-6 rounded-xl border border-primary/10 shadow-sm">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b">
-                <h3 className="font-semibold">Estimated Costs</h3>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-primary" />
-                  <span className="text-foreground/70">Monthly Payment</span>
-                </div>
-                <span className="font-semibold">USD {monthlyPayment.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <PiggyBank className="h-4 w-4 text-primary" />
-                  <span className="text-foreground/70">Total Payment</span>
-                </div>
-                <span className="font-semibold">USD {totalPayment.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <TrendingDown className="h-4 w-4 text-primary" />
-                  <span className="text-foreground/70">Total Interest</span>
-                </div>
-                <span className="font-semibold">USD {totalInterest.toFixed(2)}</span>
-              </div>
-              
-              <div className="pt-4">
-                <button className="w-full rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-                  Apply for Loan
-                </button>
-              </div>
-            </div>
+
+          {/* Results */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Payment</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl md:text-4xl font-bold text-primary">{formatCurrency(monthlyPayment)}</div>
+                <p className="text-xs text-muted-foreground mt-2">Per month</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Interest</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl md:text-4xl font-bold text-accent">{formatCurrency(totalInterest)}</div>
+                <p className="text-xs text-muted-foreground mt-2">Over {loanTerm} months</p>
+              </CardContent>
+            </Card>
+
+            <Card className="sm:col-span-2 border-border bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Amount Due</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl md:text-4xl font-bold text-foreground">{formatCurrency(totalPayment)}</div>
+                <p className="text-xs text-muted-foreground mt-2">Principal + Interest</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }

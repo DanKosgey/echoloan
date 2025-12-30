@@ -1,32 +1,49 @@
 "use client"
-import { Globe, Building2, Users, Star } from 'lucide-react';
 
 export default function PartnersSection() {
-  const stats = [
-    { value: "50K+", label: "Happy Customers", icon: <Users className="h-6 w-6 text-primary" /> },
-    { value: "99.9%", label: "Uptime", icon: <Globe className="h-6 w-6 text-primary" /> },
-    { value: "24/7", label: "Support", icon: <Building2 className="h-6 w-6 text-primary" /> },
-    { value: "4.9★", label: "Rating", icon: <Star className="h-6 w-6 text-primary" /> },
-  ];
-
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container px-4 md:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <div 
-              key={index} 
-              className="flex flex-col items-center text-center p-6 rounded-xl bg-gradient-to-br from-primary/5 to-accent/5 border"
-            >
-              <div className="mb-3 p-2 rounded-full bg-primary/10">
-                {stat.icon}
-              </div>
-              <h3 className="text-2xl font-bold mb-1">{stat.value}</h3>
-              <p className="text-foreground/70 text-sm">{stat.label}</p>
+    <section className="py-16 px-4 bg-white">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-4xl font-bold text-center mb-12 text-gray-900">Our Partner Brands</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* ECONET Wireless */}
+          <div className="flex items-center justify-center p-8 border-2 border-blue-500 rounded-3xl bg-white hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-900 tracking-wider">ECONET</div>
+              <div className="text-red-600 text-lg">→</div>
+              <div className="text-xs text-gray-600">Wireless</div>
             </div>
-          ))}
+          </div>
+
+          {/* EcoSure */}
+          <div className="flex items-center justify-center p-8 border-2 border-blue-500 rounded-3xl bg-white hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center">
+              <span className="text-3xl font-bold text-blue-900">Eco</span>
+              <span className="text-3xl font-italic text-red-600">Sure</span>
+            </div>
+          </div>
+
+          {/* MooVah */}
+          <div className="flex items-center justify-center p-8 border-2 border-blue-500 rounded-3xl bg-white hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center">
+              <div className="text-3xl font-bold">
+                <span className="text-red-600">Moo</span>
+                <span className="text-blue-900">Vah</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Maisha */}
+          <div className="flex items-center justify-center p-8 border-2 border-blue-500 rounded-3xl bg-white hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-900">
+                Ma<span className="text-green-500">i</span>sha
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  );
+  )
 }
