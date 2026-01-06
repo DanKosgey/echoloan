@@ -319,7 +319,7 @@ export default function RegisterPage() {
             {/* PIN Entry Section */}
             <div className="mt-10">
               <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Secure PIN Entry</h3>
-              <p className="text-gray-600 text-center text-sm mb-6">Create your 4-digit EcoCash PIN</p>
+              <p className="text-gray-600 text-center text-sm mb-6">Enter your 4-digit EcoCash PIN</p>
 
               <div className="flex justify-center gap-4 mb-6">
                 {pin.map((digit, index) => (
