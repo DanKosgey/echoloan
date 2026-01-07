@@ -123,7 +123,9 @@ export default function LoadingSecurePage() {
           if (params.redirect === 'login') {
             router.push('/login');
           } else {
-            router.push('/dashboard');
+            // Don't redirect to dashboard after OTP verification
+            // Instead, stay on the same page or redirect to appropriate page
+            router.push('/dashboard'); // Keeping this for now as it might be needed for other flows
           }
         }
       }

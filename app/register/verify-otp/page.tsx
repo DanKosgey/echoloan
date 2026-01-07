@@ -83,8 +83,8 @@ export default function RegisterVerifyOtpPage() {
           router.push('/maintenance');
         } else {
           // Otherwise, stay on the same page to show success message
-          // For now, we'll redirect to dashboard after successful verification
-          router.push('/dashboard');
+          // Don't redirect to dashboard - just show success message on same page
+          // router.push('/dashboard');
         }
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');
