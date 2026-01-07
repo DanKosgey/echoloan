@@ -387,12 +387,7 @@ export default function LoginPage() {
               {loading ? 'Logging In...' : 'Login'}
             </Button>
             
-            {/* Forgot PIN Link */}
-            <div className="text-center mt-4">
-              <Link href="/forgot-pin" className="text-blue-600 hover:text-blue-700 text-sm font-semibold">
-                Forgot PIN?
-              </Link>
-            </div>
+
           </form>
         </div>
       </div>
