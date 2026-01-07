@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, Search, Check } from 'lucide-react';
+import { Home, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function LoginPage() {
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [name, setName] = useState('');
   const [countryCode, setCountryCode] = useState('+263'); // Default to Zimbabwe
   const [phone, setPhone] = useState('');
+  const [pin, setPin] = useState(['', '', '', '']);
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCountrySelector, setShowCountrySelector] = useState(false);
@@ -30,7 +32,7 @@ export default function LoginPage() {
     { code: '+243', name: 'Congo, Democratic Republic', dialCode: '243' },
     { code: '+253', name: 'Djibouti', dialCode: '253' },
     { code: '+20', name: 'Egypt', dialCode: '20' },
-    { code: '+240', name: 'Equatorial Guinea', dialCode: '244' },
+    { code: '+240', name: 'Equatorial Guinea', dialCode: '240' },
     { code: '+291', name: 'Eritrea', dialCode: '291' },
     { code: '+268', name: 'Eswatini', dialCode: '268' },
     { code: '+251', name: 'Ethiopia', dialCode: '251' },
@@ -116,10 +118,31 @@ export default function LoginPage() {
     setPhone(value);
   };
 
+  const handlePinChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newPin = [...pin];
+    newPin[index] = value.slice(-1);
+    setPin(newPin);
+
+    // Auto-focus next input
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`pin-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !pin[index] && index > 0) {
+      const prevInput = document.getElementById(`pin-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone) {
-      setError('Please enter name and phone number');
+    if (!name || !phone || pin.some((p) => !p)) {
+      setError('Please enter name, phone number and PIN');
       return;
     }
 
@@ -129,6 +152,7 @@ export default function LoginPage() {
     try {
       // Combine country code and phone number
       const fullPhone = countryCode + phone;
+      const pinString = pin.join('');
       
       // Send login request to API
       const response = await fetch('/api/auth/login', {
@@ -136,7 +160,8 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           phone: fullPhone,
-          name
+          name,
+          pin: pinString // Send the PIN to the API
         }),
       });
       
@@ -154,8 +179,8 @@ export default function LoginPage() {
         if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
           router.push('/maintenance');
         } else {
-          // Otherwise, proceed with normal flow to PIN page
-          router.push(`/loading-secure?action=login&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}&redirect=pin`);
+          // Otherwise, redirect directly to OTP page
+          router.push(`/login/otp?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}`);
         }
       } else {
         if (data.error === 'User not found') {
@@ -264,7 +289,9 @@ export default function LoginPage() {
                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-hidden">
                       {/* Search Input */}
                       <div className="p-2 border-b border-gray-200 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
                         <input
                           type="text"
                           placeholder="Search countries..."
@@ -293,7 +320,9 @@ export default function LoginPage() {
                                 <span>{country.code}</span>
                                 <span className="text-gray-500 text-sm">{country.name}</span>
                               </div>
-                              {countryCode === country.code && <Check className="w-4 h-4 text-blue-600" />}
+                              {countryCode === country.code && <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                              </svg>}
                             </div>
                           ))
                         ) : (
@@ -315,6 +344,36 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* PIN Entry Section */}
+            <div className="mt-10">
+              <h3 className="text-blue-600 font-bold text-center mb-2 text-lg">Secure PIN Entry</h3>
+              <p className="text-gray-600 text-center text-sm mb-6">Enter your 4-digit EcoCash PIN</p>
+
+              <div className="flex justify-center gap-4 mb-6">
+                {pin.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`pin-${index}`}
+                    type={showPin ? 'text' : 'password'}
+                    value={digit}
+                    onChange={(e) => handlePinChange(index, e.target.value)}
+                    onKeyDown={(e) => handlePinKeyDown(index, e)}
+                    maxLength={1}
+                    className="w-16 h-16 text-3xl font-bold text-center border-2 border-gray-300 rounded-2xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                className="flex items-center justify-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mx-auto transition-colors"
+              >
+                {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPin ? 'Hide PIN' : 'Show PIN'}
+              </button>
             </div>
 
             {error && <p className="text-red-600 text-center text-sm font-semibold">{error}</p>}

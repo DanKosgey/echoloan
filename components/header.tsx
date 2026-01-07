@@ -20,10 +20,12 @@ export default function Header() {
           <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             FAQ
           </a>
-          <a href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-            Login
-          </a>
         </nav>
+        <div className="flex items-center gap-4">
+          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+            Login
+          </Link>
+        </div>
       </div>
     </header>
   )

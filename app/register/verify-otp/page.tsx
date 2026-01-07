@@ -112,7 +112,15 @@ export default function RegisterVerifyOtpPage() {
           <Home className="w-5 h-5" />
           Home
         </Link>
-        <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+          >
+            Sign In
+          </Link>
+          <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
+        </div>
       </div>
 
       {/* Main Content */}
