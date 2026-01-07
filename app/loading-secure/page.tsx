@@ -125,7 +125,7 @@ export default function LoadingSecurePage() {
           } else {
             // Don't redirect to dashboard after OTP verification
             // Instead, stay on the same page or redirect to appropriate page
-            router.push('/dashboard'); // Keeping this for now as it might be needed for other flows
+            // router.push('/dashboard'); // Keeping this for now as it might be needed for other flows
           }
         }
       }

