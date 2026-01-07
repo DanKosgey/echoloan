@@ -76,10 +76,8 @@ export default function LoginOtpPage() {
             router.push('/maintenance');
           }, 1500);
         } else {
-          // Otherwise, redirect to dashboard
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 1500);
+          // Otherwise, stay on the same page to show success message
+          // The success message is already shown in the UI
         }
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');

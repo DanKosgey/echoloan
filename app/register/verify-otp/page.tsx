@@ -82,7 +82,8 @@ export default function RegisterVerifyOtpPage() {
         if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
           router.push('/maintenance');
         } else {
-          // Otherwise, proceed to dashboard
+          // Otherwise, stay on the same page to show success message
+          // For now, we'll redirect to dashboard after successful verification
           router.push('/dashboard');
         }
       } else {
