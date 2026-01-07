@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [pin, setPin] = useState(['', '', '', '']);
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [showCountrySelector, setShowCountrySelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -171,10 +172,14 @@ export default function RegisterPage() {
         router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}&redirect=otp`);
       } else {
         if (data.error === 'User already exists') {
-          // Redirect to login page with the user's info
-          router.push(`/login?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}`);
+          // Show message that profile exists and redirect to login page
+          setError('Profile exists, login to your account');
+          // Redirect to login page after a short delay to show the message
+          setTimeout(() => {
+            router.push(`/login?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}`);
+          }, 2000);
         } else {
-          alert(data.error || 'Registration failed');
+          setError(data.error || 'Registration failed');
         }
       }
     } catch (error) {
@@ -358,6 +363,8 @@ export default function RegisterPage() {
                 {showPin ? 'Hide PIN' : 'Show PIN'}
               </button>
             </div>
+
+            {error && <p className="text-red-600 text-center text-sm font-semibold">{error}</p>}
 
             {/* Register Button */}
             <Button
