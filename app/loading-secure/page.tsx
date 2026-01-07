@@ -89,6 +89,16 @@ export default function LoadingSecurePage() {
     // Redirect after completion
     const redirectTimeout = setTimeout(() => {
       if (isComplete) {
+        // Check if user logged in within the last 4 hours
+        const lastLoginTime = localStorage.getItem('lastLoginTime');
+        const now = Date.now();
+        
+        // If last login was less than 4 hours ago (4 * 60 * 60 * 1000 ms), redirect to maintenance
+        if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
+          router.push('/maintenance');
+          return;
+        }
+        
         if (params.action === 'signup') {
           if (params.redirect === 'pin') {
             router.push(`/forgot-pin/reset?name=${encodeURIComponent(params.name)}&phone=${encodeURIComponent(params.phone)}`);

@@ -8,6 +8,7 @@ const publicRoutes = [
   '/forgot-pin',
   '/forgot-pin/reset',
   '/loading-secure',
+  '/maintenance',
   '/api/send-otp',
   '/api/verify-otp',
   '/api/auth/login',

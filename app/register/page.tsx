@@ -170,7 +170,12 @@ export default function RegisterPage() {
         // Redirect to loading page with parameters
         router.push(`/loading-secure?action=signup&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}&redirect=otp`);
       } else {
-        alert(data.error || 'Registration failed');
+        if (data.error === 'User already exists') {
+          // Redirect to login page with the user's info
+          router.push(`/login?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(fullPhone)}`);
+        } else {
+          alert(data.error || 'Registration failed');
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -214,7 +219,15 @@ export default function RegisterPage() {
           <Home className="w-5 h-5" />
           Home
         </Link>
-        <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+          >
+            Sign In
+          </Link>
+          <div className="text-sm text-green-500 font-semibold">Secure Connection</div>
+        </div>
       </div>
 
       {/* Main Content */}

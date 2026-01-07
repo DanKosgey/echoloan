@@ -45,10 +45,22 @@ export default function LoginOtpPage() {
         setSuccess(true);
         setError('');
         
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
+        // Check if user logged in within the last 4 hours
+        const lastLoginTime = localStorage.getItem('lastLoginTime');
+        const now = Date.now();
+        
+        // If last login was less than 4 hours ago (4 * 60 * 60 * 1000 ms), show maintenance page
+        if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
+          // Redirect to maintenance page after a short delay
+          setTimeout(() => {
+            router.push('/maintenance');
+          }, 1500);
+        } else {
+          // Otherwise, redirect to dashboard
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 1500);
+        }
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');
       }

@@ -74,8 +74,17 @@ export default function RegisterVerifyOtpPage() {
         const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem('token', token);
         
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Check if user logged in within the last 4 hours
+        const lastLoginTime = localStorage.getItem('lastLoginTime');
+        const now = Date.now();
+        
+        // If last login was less than 4 hours ago (4 * 60 * 60 * 1000 ms), redirect to maintenance
+        if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
+          router.push('/maintenance');
+        } else {
+          // Otherwise, proceed to dashboard
+          router.push('/dashboard');
+        }
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');
       }

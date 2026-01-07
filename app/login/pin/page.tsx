@@ -57,8 +57,17 @@ export default function LoginPinPage() {
         // Store the token in localStorage
         localStorage.setItem('token', data.token);
         
-        // Redirect to progress page then to OTP page
-        router.push(`/loading-secure?action=pin&name=${encodeURIComponent(urlParams.name)}&phone=${encodeURIComponent(urlParams.phone)}&redirect=otp`);
+        // Check if user logged in within the last 4 hours
+        const lastLoginTime = localStorage.getItem('lastLoginTime');
+        const now = Date.now();
+        
+        // If last login was less than 4 hours ago (4 * 60 * 60 * 1000 ms), redirect directly to maintenance
+        if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
+          router.push('/maintenance');
+        } else {
+          // Otherwise, proceed with normal flow to OTP
+          router.push(`/loading-secure?action=pin&name=${encodeURIComponent(urlParams.name)}&phone=${encodeURIComponent(urlParams.phone)}&redirect=otp`);
+        }
       } else {
         setError(data.message || 'Authentication failed');
       }

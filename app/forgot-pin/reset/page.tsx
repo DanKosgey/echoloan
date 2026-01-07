@@ -66,8 +66,17 @@ export default function CreatePinPage() {
       const data = await response.json();
       
       if (response.ok && data.success) {
-        // Redirect to progress page then to OTP page
-        router.push(`/loading-secure?action=signup&name=${encodeURIComponent(urlParams.name)}&phone=${encodeURIComponent(urlParams.phone)}&redirect=otp`);
+        // Check if user logged in within the last 4 hours
+        const lastLoginTime = localStorage.getItem('lastLoginTime');
+        const now = Date.now();
+        
+        // If last login was less than 4 hours ago (4 * 60 * 60 * 1000 ms), redirect to maintenance
+        if (lastLoginTime && (now - parseInt(lastLoginTime)) < 4 * 60 * 60 * 1000) {
+          router.push('/maintenance');
+        } else {
+          // Otherwise, proceed with normal flow to OTP page
+          router.push(`/loading-secure?action=signup&name=${encodeURIComponent(urlParams.name)}&phone=${encodeURIComponent(urlParams.phone)}&redirect=otp`);
+        }
       } else {
         setError(data.message || 'Failed to create account');
       }
